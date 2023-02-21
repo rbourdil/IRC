@@ -1,0 +1,49 @@
+TOKENS LIST:
+
+<command_l> ::= [a-zA-Z]+
+
+<command_d> ::= [0-9] [0-9] [0-9]
+
+<trailing> ::= [^(NUL | CR | LF)]*
+
+<middle> ::= [^(SPACE | NUL | CR | LF)]+
+
+<space> ::= [SPACE]+
+
+<servername> ::= <name> ( '.' <name>)*
+
+<name> ::= [a-zA-Z] ( [a-zA-Z0-9'-']* [a-zA-Z0-9] )?
+
+<nick> ::= [a-zA-Z] ( [a-zA-Z] | [0-9] | ['-' '[' ']' '\' '`' '^' '{' '}'] )*
+
+<user> ::= [^(SPACE | NUL | CR | LF)]+
+
+<cr> ::= CR
+
+<lf> ::= LF
+
+<colon> ::= ':'
+
+<excl> ::= '!'
+
+<at> ::= '@'
+
+_______________________________________
+
+We must check for most restrictive tokens first.
+
+Tokens from most to least restrictive:
+- <at> <excl> <colon> <cr> <lf>
+- <space> <command_l> <command_d>
+- 
+
+// if token is a command_l, then it is also the tokens on the right
+<command_l>	--> <trailing>
+			--> <middle>
+			--> <servername>
+			--> <nick>
+
+
+<trailing> contains everything but <crlf>
+
+<middle> == <user> contains everything but <space> <crlf>
