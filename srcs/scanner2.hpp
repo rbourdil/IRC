@@ -15,21 +15,14 @@ class	scanner {
 		_buff()
 		{ }
 	
-	void	load(const char* message)
-	{
-		_current = message;
-	}
-
 	int	getc(void)
 	{
-		_buff.push_back(*_current);
 		return (*_current++);
 	}
 
-	void	ungetc(void)
+	void	addc(int c)
 	{
-		_buff.pop_back();
-		_current--;
+		_buff.push_back(c);
 	}
 
 	int	peek(void)

@@ -3,20 +3,11 @@
 
 #include <iostream>
 
-#define ERROR_TOKEN 0x0
-#define CMD_L_TOKEN 0x1
-#define CMD_D_TOKEN 0x2
-#define SRV_NAME_TOKEN 0x4
-#define MIDDLE_TOKEN 0x08
-#define TRAILING_TOKEN 0x10
-#define SPACE_TOKEN 0x20
-#define NICK_TOKEN 0x40
-#define CR_TOKEN 0x80
-#define LF_TOKEN 0x100
-#define COLON_TOKEN 0x200
-#define EXCL_TOKEN 0x400
-#define AT_TOKEN 0x800
-#define END_TOKEN 0x1000
+#define ERROR_TOKEN 256
+#define PREFIX_TOKEN 257
+#define CMD_TOKEN 258
+#define PARAM_TOKEN 259
+#define END_TOKEN 260
 
 struct	token {
 

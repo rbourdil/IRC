@@ -14,6 +14,8 @@ TOKENS LIST:
 
 <name> ::= [a-zA-Z] ( [a-zA-Z0-9'-']* [a-zA-Z0-9] )?
 
+<chstring> ::= [^(SPACE | BELL | NUL | CR | LF | ',']*
+
 <nick> ::= [a-zA-Z] ( [a-zA-Z] | [0-9] | ['-' '[' ']' '\' '`' '^' '{' '}'] )*
 
 <user> ::= [^(SPACE | NUL | CR | LF)]+
@@ -27,6 +29,12 @@ TOKENS LIST:
 <excl> ::= '!'
 
 <at> ::= '@'
+
+<hash> ::= '#'
+
+<doll> ::= '$'
+
+<amp> ::= '&'
 
 _______________________________________
 
