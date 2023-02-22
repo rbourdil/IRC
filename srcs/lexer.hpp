@@ -18,7 +18,8 @@
 #define NICK_STATE 265
 #define SRV_NAME_STATE 266
 #define CHSTRING_STATE 267
-#define END_STATE 268
+#define NAME_STATE 268
+#define END_STATE 269
 
 #define CR 0xd
 #define LF 0xa
@@ -37,6 +38,11 @@ class	lexer {
 		_state(START_STATE),
 		_type(END_TOKEN)
 	{ }
+
+	void	load(const char* message)
+	{
+		_scan.load(message);
+	}
 
 	void	set_state(int state)
 	{

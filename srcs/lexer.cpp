@@ -113,7 +113,12 @@ token	lexer::get_token(void)
 					_scan.ungetc();
 					return (token(END_TOKEN));
 				}
-				else if (isdigit(c) || c == '-' || c == '.')
+				else if (isdigit(c) || c == '-')
+				{
+					set_type(NAME_TOKEN);
+					set_state(NAME_STATE);
+				}
+				else if (c == '.')
 				{
 					set_type(SRV_NAME_TOKEN);
 					set_state(SRV_NAME_STATE);
@@ -223,6 +228,35 @@ token	lexer::get_token(void)
 					set_state(ACCEPT_STATE);
 				}
 				break;
+			case NAME_STATE:
+				if (c == '\0')
+				{
+					_scan.ungetc();
+					return (token(END_TOKEN));
+				}
+				else if (c == ' ' || c == CR || c == LF)
+				{
+					_scan.ungetc();
+					set_state(ACCEPT_STATE);
+				}
+				else if (c == '.')
+					set_state(POINT_STATE);
+				else if (c != '-' && is_special_char(c))
+				{
+					set_type(NICK_TOKEN);
+					set_state(NICK_STATE);
+				}
+				else if (!isalpha(c) && !isdigit(c) && c != BELL && c != ',')
+				{
+					set_type(CHSTRING_TOKEN);
+					set_state(CHSTRING_STATE);
+				}
+				else if (!isalpha(c) && !isdigit(c))
+				{
+					set_type(PARAM_TOKEN);
+					set_state(PARAM_STATE);
+				}
+				break;
 			case SRV_NAME_STATE:
 				if (c == '\0')
 				{
@@ -308,6 +342,7 @@ token	lexer::get_token(void)
 				break;
 			default: // should never happen
 				std::cerr << "unrecognized state" << std::endl;
+				std::cerr << get_state() << std::endl;
 				exit(EXIT_FAILURE);
 		}
 		c = _scan.getc();

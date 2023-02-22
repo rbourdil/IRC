@@ -1,8 +1,8 @@
 NAME = parser
 
-OBJS = main.o lexer.o token.o 
+OBJS = main.o parser.o lexer.o token.o 
 
-HEADS = lexer.hpp scanner.hpp token.hpp
+HEADS = parser.hpp lexer.hpp scanner.hpp token.hpp
 
 CC = c++
 
