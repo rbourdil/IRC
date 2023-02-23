@@ -37,10 +37,14 @@ struct	token {
 	int			_type;
 	std::string	_lexeme;
 
-	token(void) { }
+	token(void) :
+		_type(0),
+		_lexeme()
+		{ }
 
 	token(int type) :
-		_type(type)
+		_type(type),
+		_lexeme()
 		{ }
 	
 	token(int type, const std::string& lexeme) :
@@ -60,11 +64,33 @@ struct	token {
 		return (*this);
 	}
 
-	bool	operator==(int type)
+	bool	operator==(int type) const
 	{
 		if ((_type & type) != 0)
 			return (true);
 		return (false);
+	}
+
+	bool	operator!=(int type) const
+	{
+		if ((_type & type) == 0)
+			return (true);
+		return (false);
+	}
+
+	// only used to print something for non printable characters
+	std::string	print_lexeme(void) const
+	{
+		if (_type == SPACE_TOKEN)
+			return ("SPACE");
+		else if (_type == CR_TOKEN)
+			return ("CR");
+		else if (_type == LF_TOKEN)
+			return ("LF");
+		else if (_type == END_TOKEN)
+			return ("NUL");
+		else
+			return (_lexeme);
 	}
 
 };

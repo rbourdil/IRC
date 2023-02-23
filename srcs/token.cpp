@@ -46,6 +46,6 @@ std::string	map_type(int type)
 
 std::ostream&	operator<<(std::ostream& os, const token& tok)
 {
-	os << map_type(tok._type) << " : " << tok._lexeme;
+	os << map_type(tok._type) << " : " << tok.print_lexeme();
 	return (os);
 }

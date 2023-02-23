@@ -44,6 +44,13 @@ class	scanner {
 		return (tmp);
 	}
 
+	//DEBUG
+
+	const char*	get_input(void)
+	{
+		return (_current);
+	}
+
 };
 
 #endif

@@ -24,26 +24,6 @@ token	lexer::get_token(void)
 					set_type(COLON_TOKEN);
 					set_state(ACCEPT_STATE);
 				}
-				else if (c == ',')
-				{
-					set_type(COMMA_TOKEN);
-					set_state(ACCEPT_STATE);
-				}
-				else if (c == '#')
-				{
-					set_type(HASH_TOKEN);
-					set_state(ACCEPT_STATE);
-				}
-				else if (c == '$')
-				{
-					set_type(DOLL_TOKEN);
-					set_state(ACCEPT_STATE);
-				}
-				else if (c == '&')
-				{
-					set_type(AND_TOKEN);
-					set_state(ACCEPT_STATE);
-				}
 				else if (c == '!')
 				{
 					set_type(EXCL_TOKEN);
@@ -65,10 +45,7 @@ token	lexer::get_token(void)
 					set_state(ACCEPT_STATE);
 				}
 				else if (c == '\0')
-				{
-					_scan.ungetc();
 					return (token(END_TOKEN));
-				}
 				else if (c == ' ')
 				{
 					set_type(SPACE_TOKEN);
@@ -84,11 +61,6 @@ token	lexer::get_token(void)
 					set_type(CMD_D_TOKEN);
 					set_state(CMD_D_STATE);
 				}
-				else if (c != BELL && c != ',')
-				{
-					set_type(CHSTRING_TOKEN);
-					set_state(CHSTRING_STATE);
-				}
 				else
 				{
 					set_type(PARAM_TOKEN);
@@ -97,10 +69,7 @@ token	lexer::get_token(void)
 				break;
 			case SPACE_STATE:
 				if (c == '\0')
-				{
-					_scan.ungetc();
 					return (token(END_TOKEN));
-				}
 				else if (c != ' ')
 				{
 					_scan.ungetc();
@@ -109,10 +78,7 @@ token	lexer::get_token(void)
 				break;
 			case CMD_L_STATE:
 				if (c == '\0')
-				{
-					_scan.ungetc();
 					return (token(END_TOKEN));
-				}
 				else if (isdigit(c) || c == '-')
 				{
 					set_type(NAME_TOKEN);
@@ -133,11 +99,6 @@ token	lexer::get_token(void)
 					_scan.ungetc();
 					set_state(ACCEPT_STATE);
 				}
-				else if (!isalpha(c) && c != BELL && c != ',')
-				{
-					set_type(CHSTRING_TOKEN);
-					set_state(CHSTRING_STATE);
-				}
 				else if (!isalpha(c))
 				{
 					set_type(PARAM_TOKEN);
@@ -146,20 +107,12 @@ token	lexer::get_token(void)
 				break;
 			case CMD_D_STATE:
 				if (c == '\0')
-				{
-					_scan.ungetc();
 					return (token(END_TOKEN));
-				}
 				else if (c == ' ' || c == CR || c == LF)
 				{
 					_scan.ungetc();
-					set_type(CHSTRING_TOKEN);
+					set_type(PARAM_TOKEN);
 					set_state(ACCEPT_STATE);
-				}
-				else if (!isdigit(c) && c != BELL && c != ',')
-				{
-					set_type(CHSTRING_TOKEN);
-					set_state(CHSTRING_STATE);
 				}
 				else if (!isdigit(c))
 				{
@@ -178,13 +131,8 @@ token	lexer::get_token(void)
 				else if (c == ' ' || c == CR || c == LF)
 				{
 					_scan.ungetc();
-					set_type(CHSTRING_TOKEN);
+					set_type(PARAM_TOKEN);
 					set_state(ACCEPT_STATE);
-				}
-				else if (!isdigit(c) && c != BELL && c != ',')
-				{
-					set_type(CHSTRING_TOKEN);
-					set_state(CHSTRING_STATE);
 				}
 				else if (!isdigit(c))
 				{
@@ -204,11 +152,6 @@ token	lexer::get_token(void)
 				{
 					_scan.ungetc();
 					set_state(ACCEPT_STATE);
-				}
-				else if (c != BELL && c != ',')
-				{
-					set_type(CHSTRING_TOKEN);
-					set_state(CHSTRING_STATE);
 				}
 				else
 				{
@@ -246,11 +189,6 @@ token	lexer::get_token(void)
 					set_type(NICK_TOKEN);
 					set_state(NICK_STATE);
 				}
-				else if (!isalpha(c) && !isdigit(c) && c != BELL && c != ',')
-				{
-					set_type(CHSTRING_TOKEN);
-					set_state(CHSTRING_STATE);
-				}
 				else if (!isalpha(c) && !isdigit(c))
 				{
 					set_type(PARAM_TOKEN);
@@ -274,11 +212,6 @@ token	lexer::get_token(void)
 				{
 					set_type(NICK_TOKEN);
 					set_state(NICK_STATE);
-				}
-				else if (!isalpha(c) && !isdigit(c) && c != BELL && c != ',')
-				{
-					set_type(CHSTRING_TOKEN);
-					set_state(CHSTRING_STATE);
 				}
 				else if (!isalpha(c) && !isdigit(c))
 				{
@@ -312,29 +245,7 @@ token	lexer::get_token(void)
 					_scan.ungetc();
 					set_state(ACCEPT_STATE);
 				}
-				else if (!isalpha(c) && !isdigit(c) && !is_special_char(c) && c != BELL && c != ',')
-				{
-					set_type(CHSTRING_TOKEN);
-					set_state(CHSTRING_STATE);
-				}
 				else if (!isalpha(c) && !isdigit(c) && !is_special_char(c))
-				{
-					set_type(PARAM_TOKEN);
-					set_state(PARAM_STATE);
-				}
-				break;
-			case CHSTRING_STATE:
-				if (c == '\0')
-				{
-					_scan.ungetc();
-					return (token(END_TOKEN));
-				}
-				else if (c == ' ' || c == CR || c == LF)
-				{
-					_scan.ungetc();
-					set_state(ACCEPT_STATE);
-				}
-				else if (c == BELL || c == ',')
 				{
 					set_type(PARAM_TOKEN);
 					set_state(PARAM_STATE);

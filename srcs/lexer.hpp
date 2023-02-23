@@ -66,6 +66,13 @@ class	lexer {
 	
 	token	get_token(void);
 
+	// DEBUG
+
+	const char*	get_input(void)
+	{
+		return (_scan.get_input());
+	}
+
 };
 
 #endif

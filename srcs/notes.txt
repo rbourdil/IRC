@@ -55,3 +55,14 @@ Tokens from most to least restrictive:
 <trailing> contains everything but <crlf>
 
 <middle> == <user> contains everything but <space> <crlf>
+
+_______________________________________
+
+What to do on END_TOKEN ?
+
+Meeting an END_TOKEN indicates either that:
+- the command is ill formed (does not end in crlf)
+- or that the command is incomplete (new buffer must be loaded)
+
+In both cases, we should try to load a new buffer. 
+If the newly loaded buffer is empty, then the command is ill formed, else, continue parsing

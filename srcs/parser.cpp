@@ -2,24 +2,25 @@
 
 void	parser::match(int types)
 {
-	if (_current == ERROR_TOKEN)
+	if (_current == END_TOKEN)
+	{
+		_reload = true; // ask for new input
+	}
+	else if (_current == ERROR_TOKEN)
 	{
 		std::cerr << "unrecognized token: " << _current._lexeme << std::endl;
-		exit(EXIT_FAILURE);
+		update_state(DUMP_CMD);
 	}
-	else if (_current == END_TOKEN)
+	else if (_current != types)
 	{
-		std::cerr << "reached end of input" << std::endl;
-		print_irc_cmd(_irc_cmd);
-		exit(EXIT_FAILURE);
+		std::cerr << "unexpected token: " << _current.print_lexeme() << std::endl;
+		update_state(DUMP_CMD);
+		//DEBUG
+		_tok.print_backlog();
+		std::cerr << types << std::endl;
 	}
-	else if (_current == types)
+	if (!_reload)
 		get_token();
-	else
-	{
-		std::cerr << "unexpected token: " << _current._lexeme << std::endl;
-		exit(EXIT_FAILURE);
-	}
 }
 
 void	parser::get_prefix(void)
@@ -57,35 +58,39 @@ void	parser::get_cmd(void)
 	match(CMD_L_TOKEN | CMD_D_TOKEN);
 	if (_current == SPACE_TOKEN)
 		get_params();
+	get_crlf();
 }
 
 void	parser::get_params(void)
 {
-	match(SPACE_TOKEN);
-	if (_current == COLON_TOKEN)
+	if (_current == SPACE_TOKEN)
 	{
-		match(COLON_TOKEN);
-		update_params();
-		match(PARAM_GRP);
-		while (_current == PARAM_GRP || _current == SPACE_TOKEN)
+		match(SPACE_TOKEN);
+		if (_current == COLON_TOKEN)
 		{
-			merge_params();
-			match(PARAM_GRP | SPACE_TOKEN);
+			match(COLON_TOKEN);
+			update_params();
+			match(PARAM_GRP);
+			while (_current == PARAM_GRP || _current == SPACE_TOKEN)
+			{
+				merge_params();
+				match(PARAM_GRP | SPACE_TOKEN);
+			}
+		}
+		else if (_current == PARAM_GRP)
+		{
+			update_params();
+			match(PARAM_GRP);
+			get_params();
 		}
 	}
-	else
-	{
-		update_params();
-		match(PARAM_GRP);
-		get_params();
-	}
-	get_crlf();
 }
 
 void	parser::get_crlf(void)
 {
 	match(CR_TOKEN);
 	match(LF_TOKEN);
+	update_state(COMPLETE_CMD);
 }
 
 void	parser::parse(void)
@@ -98,9 +103,17 @@ void	parser::parse(void)
 	}
 	else
 		get_cmd();
+	if (_reload)
+	{
+		pop_token();
+		reload();
+	}
+	else
+		unget_token();
 }
 
 // DEBUG
+
 void	print_irc_cmd(const irc_cmd& cmd)
 {
 	std::cerr << "prefix:\t" << cmd._prefix << std::endl;
@@ -110,5 +123,3 @@ void	print_irc_cmd(const irc_cmd& cmd)
 	for (; it != cmd._params.end(); it++)
 		std::cerr << "\t" << *it << std::endl;
 }
-
-
