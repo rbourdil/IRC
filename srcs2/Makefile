@@ -1,6 +1,6 @@
 NAME = parser
 
-OBJS = main.o parser.o lexer.o token.o 
+OBJS = main.o parser.o lexer.o token.o
 
 HEADS = parser.hpp lexer.hpp scanner.hpp token.hpp
 
