@@ -44,9 +44,11 @@
 #define BANG_CHAN 259
 
 // USER STATES
-#define UNREGISTERED_STATE 256
-#define NICK_STATE 257
-#define REGISTERED_STATE 258
+#define UNREGISTERED_STATE 0x0
+#define NICK_VALID 0x1
+#define PASSWD_VALID 0x2
+#define USER_VALID 0x4
+#define REGISTERED_STATE 0x7
 
 struct	Client {
 
@@ -58,18 +60,18 @@ struct	Client {
 	std::set<std::string>		_channels;
 	int							_mode;
 
-	Client(void) : _state(UNREGISTERED_STATE), _mode(0) { }
+	Client(const std::string& hostname) : _state(UNREGISTERED_STATE), _hostname(hostname), _mode(0) { }
 
 };
 
-struct	Channels {
+struct	Channel {
 
 	int					_type;
 	std::string			_topic;
 	std::map<int, int>	_members;
 	int					_mode;
 
-	Channels(void) : _mode(0) { }
+	Channel(int type) : _type(type), _mode(0) { }
 
 };
 
@@ -77,23 +79,22 @@ class	Data {
 
 	typedef std::map<int, Client>::iterator					client_iterator;
 	typedef std::map<int, Client>::const_iterator			client_const_iterator;
-	typedef std::map<std::string, Channels>::iterator		channel_iterator;
-	typedef std::map<std::string, Channels>::const_iterator	channel_const_iterator;
+	typedef std::map<std::string, Channel>::iterator		channel_iterator;
+	typedef std::map<std::string, Channel>::const_iterator	channel_const_iterator;
 	typedef std::map<std::string, int>::iterator			strint_iterator;
 	typedef std::map<std::string, int>::const_iterator		strint_const_iterator;
 
 	private:
 
 		const std::string	_passwd;
-
-		// used to lookup by nickname
+// used to lookup by nickname
 		std::map<std::string, int>	_nick_to_fd;
 
 		// actual data
 		// clients are looked up by nickname
 		// channels are looked up by name
 		std::map<int, Client>				_clients;
-		std::map<std::string, Channels>		_channels;
+		std::map<std::string, Channel>		_channels;
 
 			
 	public:
@@ -152,12 +153,12 @@ class	Data {
 				it->second._realname = realname;
 		}
 
-		void	set_state(int fd, int state)
+		void	set_user_state(int fd, int state)
 		{
 			client_iterator	it = _clients.find(fd);
 
 			if (it != _clients.end())
-				it->second._state = state;
+				it->second._state |= state;
 		}
 
 		void	set_user_flags(int fd, int flags)
@@ -193,6 +194,16 @@ class	Data {
 		}
 
 			// channel operations
+		void	add_channel(const std::string& name, int type)
+		{
+			_channels.insert(std::make_pair(name, Channel(type)));
+		}
+
+		void	remove_channel(const std::string& channel)
+		{
+			_channels.erase(channel);
+		}
+
 		void	add_user_to_channel(int fd, const std::string& channel)
 		{
 			channel_iterator	it = _channels.find(channel);
@@ -207,14 +218,6 @@ class	Data {
 
 			if (it != _channels.end())
 				it->second._members.erase(fd);
-		}
-
-		void	set_channel_type(const std::string& channel, int type)
-		{
-			channel_iterator	it = _channels.find(channel);
-
-			if (it != _channels.end())
-				it->second._type = type;
 		}
 
 		void	set_channel_topic(const std::string& channel, const std::string& topic)
@@ -293,12 +296,12 @@ class	Data {
 				throw std::runtime_error("no account registered with this file descriptor");
 		}
 
-		int	get_user_state(int fd) const
+		bool	check_user_state(int fd, int state) const
 		{
 			client_const_iterator	it = _clients.find(fd);
 
 			if (it != _clients.end())
-				return (it->second._state);
+				return (it->second._state & state);
 			else
 				throw std::runtime_error("no account registered with this file descriptor");
 
@@ -346,6 +349,15 @@ class	Data {
 		}
 
 			// channel lookup
+		bool	channel_exists(const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				return (true);
+			return (false);
+		}
+
 		int	get_channel_type(const std::string& channel) const
 		{
 			channel_const_iterator	it = _channels.find(channel);
@@ -376,6 +388,22 @@ class	Data {
 				throw std::runtime_error("channel name does not exist");
 		}
 
+		std::vector<int>	get_members_list_fd(const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+			{
+				std::vector<int>	members;
+				std::map<int, int>::const_iterator	itm = it->second._members.begin();
+				for (; itm != it->second._members.end(); itm++)
+					members.push_back(itm->first);
+				return (members);
+			}
+			else
+				throw std::runtime_error("channel name does not exist");
+		}
+
 		// DEBUG
 
 		void	print_user(int fd) const
@@ -388,17 +416,30 @@ class	Data {
 				std::cout << it->second._username << "@";
 				std::cout << it->second._hostname << std::endl;
 				std::cout << it->second._realname << std::endl;
-				print_channels(it->second._channels);
+				print_user_channels(it->second._channels);
 			}
 		}
 
-		void	print_channels(const std::set<std::string>& channels) const
+		void	print_user_channels(const std::set<std::string>& channels) const
 		{
 			std::set<std::string>::const_iterator	it;
 			for (it = channels.begin(); it != channels.end(); it++)
 				std::cout << *it << std::endl;
 		}
 
+		void	print_channel(const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+			{
+				std::cout << it->second._topic << std::endl;
+				std::vector<int>	members = get_members_list_fd(channel);
+				for (std::vector<int>::iterator itv = members.begin(); itv != members.end(); itv++)
+					std::cout << *itv << ",";
+				std::cout << std::endl;
+			}
+		}
 
 };
 

@@ -72,3 +72,28 @@ void	parser::parse(void)
 		get_cmd();
 	get_crlf();
 }
+
+bool	isspecial(int c)
+{
+	if ((c >= 0x5b && x <= 0x60) || (c >= 0x7b && c <= 0x7d))
+		return (true);
+	return (false);
+}
+
+bool	valid_nickname(const std::string& nick)
+{
+	std::string::const_iterator	it = nick.begin();
+
+	if (nick.empty())
+		return (false);
+	if (isdigit(*it) || isspecial(*it))
+		it++;
+	for (int count = 0; it != nick.end() && count < 8; it++)
+	{
+		if (!isdigit(*it) && !isalpha(*it) && !isspecial(*it) && *it != '-')
+			break ;
+	}
+	if (it != nick.end())
+		return (false);
+	return (true);
+}
