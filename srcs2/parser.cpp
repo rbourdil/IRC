@@ -75,7 +75,7 @@ void	parser::parse(void)
 
 bool	isspecial(int c)
 {
-	if ((c >= 0x5b && x <= 0x60) || (c >= 0x7b && c <= 0x7d))
+	if ((c >= 0x5b && c <= 0x60) || (c >= 0x7b && c <= 0x7d))
 		return (true);
 	return (false);
 }

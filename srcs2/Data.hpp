@@ -105,9 +105,9 @@ class	Data {
 		// modifiers
 
 			//user operations
-		void	add_user(int fd)
+		void	add_user(int fd, const std::string& hostname)
 		{
-			_clients.insert(std::make_pair(fd, Client()));
+			_clients.insert(std::make_pair(fd, Client(hostname)));
 		}
 
 		void	delete_user(int fd)

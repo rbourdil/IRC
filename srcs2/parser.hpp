@@ -5,18 +5,11 @@
 #include <vector>
 
 #include "lexer.hpp"
+#include "cmd_structs.hpp"
 
 #define VALID_CMD 256
 #define DUMP_CMD 257
 #define STOP_PARSE 258
-
-struct	irc_cmd {
-
-	std::string					_prefix;
-	std::string					_cmd;
-	std::vector<std::string>	_params;
-
-};
 
 class parser {
 

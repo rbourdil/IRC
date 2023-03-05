@@ -4,21 +4,17 @@
 #include <map>
 
 #include "Data.hpp"
+#include "cmd_structs.hpp"
 
+#define ERR_UNKNOWNCOMMAND 421
 #define ERR_NONICKNAMEGIVEN 431
+#define ERR_ERRONEUSNICKNAME 432
+#define ERR_NICKNAMEINUSE 433
 #define ERR_NOTREGISTERED 451
 #define ERR_NEEDMOREPARAMS 461
 #define ERR_ALREADYREGISTRED 462
 #define ERR_PASSWDMISMATCH 464
 #define ERR_RESTRICTED 484
-
-struct	Reply {
-
-	int				_rplnum;
-	std::set<int>	_dest;
-	std::string		_arg;
-
-};
 
 class	Command {
 
@@ -30,6 +26,7 @@ class	Command {
 		Reply							_rpl;
 		std::map<std::string, FuncPtr>	_cmd_map;
 
+		
 		void	set_rplnum(int rplnum)
 		{
 			_rpl._rplnum = rplnum;
@@ -45,19 +42,12 @@ class	Command {
 			_rpl._arg = arg;
 		}
 
-		void	reset(void)
-		{
-			_rpl._rplnum = 0;
-			_rpl._dest.clear();
-			_rpl._arg.clear();
-		}
-
 		void	pass(int fd, const std::vector<std::string>& params)
 		{
 			add_dest(fd);
 			if (params.size() == 0)
 				set_rplnum(ERR_NEEDMOREPARAMS);
-			else if (_data->isregistered(fd))
+			else if (_data->is_registered(fd))
 				set_rplnum(ERR_ALREADYREGISTRED);
 			else if (!_data->compare_passwd(params[0]))
 				set_rplnum(ERR_PASSWDMISMATCH);
@@ -75,12 +65,12 @@ class	Command {
 				set_rplnum(ERR_ERRONEUSNICKNAME);
 				set_arg(params[0]);
 			}
-			else if (_data.nickname_exists(params[0]))
+			else if (_data->nickname_exists(params[0]))
 			{
 				set_rplnum(ERR_NICKNAMEINUSE);
 				set_arg(params[0]);
 			}
-			else if (check_user_flags(fd, RESTRICTED_UFLAG))
+			else if (_data->check_user_flags(fd, RESTRICTED_UFLAG))
 				set_rplnum(ERR_RESTRICTED);
 			else
 			{
@@ -94,25 +84,55 @@ class	Command {
 			add_dest(fd);
 			if (params.size() < 4)
 				set_rplnum(ERR_NEEDMOREPARAMS);
-			else if (_data->isregistered(fd))
+			else if (_data->is_registered(fd))
 				set_rplnum(ERR_ALREADYREGISTRED);
 			else
 			{
 				_data->add_username(fd, params[0]);
-				if (params[1] == '4')
-					set_user_flags(fd, WALLOPS_UFLAG);
-				else if (params[1] == '8')
-					set_user_flags(fd, INVISIBLE_UFLAG);
-				_data->add_realname(fd, params[4]);
+				if (params[1] == "4")
+					_data->set_user_flags(fd, WALLOPS_UFLAG);
+				else if (params[1] == "8")
+					_data->set_user_flags(fd, INVISIBLE_UFLAG);
+				_data->add_realname(fd, params[3]);
 				_data->set_user_state(fd, USER_VALID);
 			}
 		}
 
 	public:
 
-		Command(void)
+		Command(Data* data) : _data(data)
 		{
-			_cmd_map.insert(std::make_pair("PASS", pass));
-			_cmd_map.insert(std::make_pair("NICK", nick));
-			_cmd_map.insert(std::make_pair("USER", user));
+			_cmd_map.insert(std::make_pair("PASS", &Command::pass));
+			_cmd_map.insert(std::make_pair("NICK", &Command::nick));
+			_cmd_map.insert(std::make_pair("USER", &Command::user));
 		}
+
+		Reply	out(void) const
+		{
+			return (_rpl);
+		}
+
+		void	reset(void) // to do after each call of 'execute_cmd'
+		{
+			_rpl._rplnum = 0;
+			_rpl._dest.clear();
+			_rpl._arg.clear();
+		}
+
+		void	execute_cmd(int fd, const irc_cmd& cmd)
+		{
+			std::map<std::string, FuncPtr>::iterator	it = _cmd_map.find(cmd._cmd);
+
+			if (it != _cmd_map.end()) // found a valid command
+				(this->*(it->second))(fd, cmd._params);	
+			else
+			{
+				add_dest(fd);
+				set_arg(cmd._cmd);
+				set_rplnum(ERR_UNKNOWNCOMMAND);
+			}
+		}
+				
+};
+
+#endif
