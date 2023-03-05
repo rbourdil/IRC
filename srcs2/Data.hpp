@@ -296,6 +296,24 @@ class	Data {
 				throw std::runtime_error("no account registered with this file descriptor");
 		}
 
+		std::string	get_user_info(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+			{
+				std::string	info;
+				info += it->second._nickname;
+				info += "!";
+				info += it->second._username;
+				info += "@";
+				info += it->second._hostname;
+				return (info);
+			}
+			else
+				throw std::runtime_error("no account registered with this file descriptor");
+		}	
+
 		bool	check_user_state(int fd, int state) const
 		{
 			client_const_iterator	it = _clients.find(fd);

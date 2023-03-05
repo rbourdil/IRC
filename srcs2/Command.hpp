@@ -7,6 +7,7 @@
 #include "cmd_structs.hpp"
 
 // REPLIES
+#define RPL_WELCOME 1
 #define RPL_UMODEIS 221
 
 // ERROR REPLIES
@@ -57,7 +58,14 @@ class	Command {
 			else if (!_data->compare_passwd(params[0]))
 				set_rplnum(ERR_PASSWDMISMATCH);
 			else
+			{
 				_data->set_user_state(fd, PASSWD_VALID);
+				if (_data->is_registered(fd))
+				{
+					set_rplnum(RPL_WELCOME);
+					set_arg(_data->get_user_info(fd));
+				}
+			}
 		}
 
 		void	nick(int fd, const std::vector<std::string>& params)
@@ -81,6 +89,11 @@ class	Command {
 			{
 				_data->add_nickname(fd, params[0]);
 				_data->set_user_state(fd, NICK_VALID);
+				if (_data->is_registered(fd))
+				{
+					set_rplnum(RPL_WELCOME);
+					set_arg(_data->get_user_info(fd));
+				}
 			}
 		}
 
@@ -100,6 +113,11 @@ class	Command {
 					_data->set_user_flags(fd, INVISIBLE_UFLAG);
 				_data->add_realname(fd, params[3]);
 				_data->set_user_state(fd, USER_VALID);
+				if (_data->is_registered(fd))
+				{
+					set_rplnum(RPL_WELCOME);
+					set_arg(_data->get_user_info(fd));
+				}
 			}
 		}
 
