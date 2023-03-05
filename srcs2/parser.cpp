@@ -97,3 +97,19 @@ bool	valid_nickname(const std::string& nick)
 		return (false);
 	return (true);
 }
+
+bool	valid_mode(const std::string& mode)
+{
+	std::string::const_iterator	it = mode.begin();
+
+	if (mode.empty())
+		return (false);
+	if (*it != '+' && *it != '-')
+		return (false);
+	it++;
+	while (*it == 'i' || *it == 'w' || *it == 'o' || *it == 'O' || *it == 'r')
+		it++;
+	if (it != mode.end())
+		return (false);
+	return (true);
+}

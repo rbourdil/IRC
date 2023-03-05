@@ -338,6 +338,31 @@ class	Data {
 				throw std::runtime_error("no account registered with this file descriptor");
 		}
 
+		std::string	get_user_flags_str(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+			std::string				flags("+");
+
+			if (it != _clients.end())
+			{
+				if ((it->second._mode & AWAY_UFLAG) != 0)
+					flags += "a";		
+				if ((it->second._mode & INVISIBLE_UFLAG) != 0)
+					flags += "i";
+				if ((it->second._mode & WALLOPS_UFLAG) != 0)
+					flags += "w";
+				if ((it->second._mode & RESTRICTED_UFLAG) != 0)
+					flags += "r";
+				if ((it->second._mode & OPER_UFLAG) != 0)
+					flags += "o";
+				if ((it->second._mode & LOCAL_OPER_UFLAG) != 0)
+					flags += "O";
+				if ((it->second._mode & SRV_NOTICE_UFLAG) != 0)
+					flags += "s";
+			}
+			return (flags);
+		}
+
 		int	user_channel_count(int fd) const
 		{
 			client_const_iterator	it = _clients.find(fd);

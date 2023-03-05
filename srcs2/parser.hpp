@@ -91,5 +91,6 @@ class parser {
 
 bool	isspecial(int c);
 bool	valid_nickname(const std::string& nick);
+bool	valid_mode(const std::string& mode);
 
 #endif
