@@ -5,18 +5,11 @@
 #include <vector>
 
 #include "lexer.hpp"
+#include "cmd_structs.hpp"
 
 #define VALID_CMD 256
 #define DUMP_CMD 257
-#define STOP_PARSE 258
-
-struct	irc_cmd {
-
-	std::string					_prefix;
-	std::string					_cmd;
-	std::vector<std::string>	_params;
-
-};
+#define INCOMPLETE_CMD 258
 
 class parser {
 
@@ -25,6 +18,7 @@ class parser {
 		scanner	_scan;
 		irc_cmd	_cmd;
 		token	_current;
+		int		_state;
 		bool	_panic;
 
 		void	update_prefix(void) {_cmd. _prefix = _current._lexeme; }
@@ -43,7 +37,11 @@ class parser {
 		{
 			if (_current != type && !_panic)
 			{
-				std::cerr << "unexpected token: " << _current << std::endl;
+				if (_current != EOF_TOKEN)
+				{
+					std::cerr << "unexpected token: " << _current << std::endl;
+					_state = DUMP_CMD;
+				}
 				_panic = true;
 			}
 			else if (!_panic)
@@ -52,7 +50,7 @@ class parser {
 
 	public:
 
-		parser(int fd) : _scan(fd), _panic(false)
+		parser(const Buffer& buff) : _scan(buff), _state(INCOMPLETE_CMD), _panic(false)
 		{
 			_current = get_token(_scan);
 		}
@@ -63,17 +61,11 @@ class parser {
 		{
 			while (_current != EOF_TOKEN)
 			{
-				if (_current == '\r')
+				if (_current == '\n')
 				{
 					_current = get_token(_scan);
-					if (_current == '\n')
-					{
-						_current = get_token(_scan);
-						break;
-					}
+					break ;
 				}
-				if (_current != '\r')
-					_current = get_token(_scan);
 			}
 		}
 
@@ -81,11 +73,7 @@ class parser {
 
 		int	state(void) const
 		{
-			if (_panic && _current == EOF_TOKEN)
-				return (STOP_PARSE);
-			else if (_panic)
-				return (DUMP_CMD);
-			return (VALID_CMD);
+			return (_state);
 		}
 
 		void	reset(void)
@@ -95,5 +83,13 @@ class parser {
 		}
 
 };
+
+bool	isspecial(int c);
+bool	valid_nickname(const std::string&);
+bool	valid_username(const std::string&);
+bool	valid_mode(const std::string&);
+bool	valid_channel(const std::string&);
+
+std::vector<std::string>	parse_list(const std::string&);
 
 #endif
