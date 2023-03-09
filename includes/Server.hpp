@@ -15,30 +15,24 @@ class Server
 		std::map<int, Client*>				_clients;
 		char								remoteIP[INET6_ADDRSTRLEN];
 		char 								host[NI_MAXHOST];
-
-		// std::map<std::string, Channel*>		_channels;
 		Data								*_data;
+		int									_last_ping;
 	public:
 	
 	Server(int listener, Data* data);
 
-	void add_to_pfds(int new_fd);
-
-	void del_from_pfds(pfd_iter iter);
-
-	int	get_fd(int i);
-
+	void	add_to_pfds(int new_fd);
+	void	run();
 	void	*get_in_addr(struct sockaddr *sa);
-
-	int		accept_connection(size_t location);
-
-	int		receive_send_data(pfd_iter iter);
-
 	void	send_data(int numbytes, int sender_fd);
+	void	del_from_pfds(pfd_iter iter);
+	void	handle_timeout(std::map<int, Buffer> &bufmap);
 
+	int		get_fd(int i);
+	int		accept_connection(size_t location);
+	int		receive_send_data(pfd_iter iter);
 	int		receive_data(pfd_iter iter, int *numbytes);
 
-	void run();
 
 };
 

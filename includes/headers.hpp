@@ -28,6 +28,8 @@
 #define DEBUG 0
 #endif
 
+#define	TIMEOUT 5000
+#define DISCONENCT_TIME 60
 
 // REPLIES
 #define RPL_WELCOME 1

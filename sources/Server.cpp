@@ -3,9 +3,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-Server::Server(int listener, Data *data) : _listener(listener), _data(data)
+Server::Server(int listener, Data *data) : _listener(listener), _data(data), _last_ping(static_cast<int>(std::time(NULL)))
 {
-	_listener = listener;
 	_pfds.push_back(pollfd());
 	_pfds.back().fd = listener;
 	_pfds.back().events = POLLIN;
@@ -126,6 +125,27 @@ int		Server::receive_data(pfd_iter iter, int *numbytes)
 	return (iter->fd);
 }
 
+void	Server::handle_timeout(std::map<int, Buffer> &bufmap)
+{
+	std::vector<struct pollfd>::iterator _iter = _pfds.begin() + 1;
+	while (_iter != _pfds.end())
+	{
+		int _time = std::time(NULL) - _last_ping;
+		if (_time > DISCONENCT_TIME)
+		{
+			std::cout << "Will disconnect client from socket " << _iter->fd << " for innactivity" << std::endl;
+			std::string	err_message = "You are being disconnected for innactivity, bye boo xoxo\n";
+			send(_iter->fd, err_message.c_str(), err_message.size(), 0);
+			_data->delete_user(_iter->fd);
+			close(_iter->fd);
+			bufmap.erase(_iter->fd);
+			_iter = _pfds.erase(_iter);
+		}
+		else
+			_iter++;
+	}
+}
+
 void	Server::run()
 {
 	char					buff[BUFSIZE];
@@ -140,23 +160,25 @@ void	Server::run()
 	}
 	while (1)
 	{
-		int poll_count = poll(&_pfds[0], _pfds.size(), 50000);
+		int poll_count = poll(&_pfds[0], _pfds.size(), TIMEOUT);
 
 		if (poll_count == -1)
 		{
 			perror("poll:");
 			exit(1);
 		}
-		else if (poll_count == 0)
-		{
-			std::cout << "Timeout" << std::endl;
-			continue;
-		}	
+		// else if (poll_count == 0)
+		// {
+		// 	std::cout << "Timeout" << std::endl;
+		// 	continue;
+		// }	
 		if (_pfds[0].revents & POLLIN)
 		{
 			int fd = accept_connection(0);
 			_data->add_user(fd, host, remoteIP);
 			bufmap.insert(std::make_pair(fd, Buffer()));
+			_last_ping = static_cast<int>(std::time(NULL));
+			std::cout << "last_ping" << _last_ping << std::endl;
 		}
 		std::vector<struct pollfd>::iterator _iter = _pfds.begin() + 1;
 		while (_iter != _pfds.end())
@@ -184,7 +206,7 @@ void	Server::run()
 				}
 				else if (count == 0)
 				{
-					std::cerr << _iter->fd << " close connection" << std::endl;
+					std::cerr << "Client from socket: " << _iter->fd << ": hung up" << std::endl;
 					_data->delete_user(_iter->fd);
 					close(_iter->fd);
 					bufmap.erase(_iter->fd);
@@ -192,6 +214,7 @@ void	Server::run()
 				}
 				else
 				{
+					_last_ping = static_cast<int>(std::time(NULL));
 					Buffer&	storage = (bufmap.find(_iter->fd))->second;
 					if (storage.size() + count > BUFSIZE)
 					{
@@ -222,16 +245,17 @@ void	Server::run()
 						storage.append(buff + i, count - i);
 						if (!_data->is_connected(_iter->fd))
 						{
+							std::cerr << "Client from socket: " << _iter->fd << " hung up" << std::endl;
 							close(_iter->fd);
 							bufmap.erase(_iter->fd);
 							_iter = _pfds.erase(_iter);
-							std::cerr << _iter->fd << " close connection" << std::endl;
 						}
 						else
 							++_iter;
 					}
 				}
+			}
 		}
+		handle_timeout(bufmap);
 	}
-}
 }
