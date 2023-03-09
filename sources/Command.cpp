@@ -307,7 +307,6 @@ void	Command::quit_dispatch(int fd, const std::vector<std::string>& params)
 		_args.push_back(params[0]);
 	for (; it != friends.end(); ++it)
 		error_quit(*it, _args);
-	//severe connection
 }
 
 void	Command::join_dispatch(int fd, const std::vector<std::string>& params)
