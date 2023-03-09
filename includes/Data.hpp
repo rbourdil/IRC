@@ -523,7 +523,7 @@ class	Data {
 			if (it != _channels.end())
 			{
 				std::map<int, int>::const_iterator	itm = it->second._members.find(fd);
-				if (itm != it->second._members.find(fd))
+				if (itm != it->second._members.end())
 					return (itm->second & status);
 			}
 			return (false);
