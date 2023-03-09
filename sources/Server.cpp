@@ -74,9 +74,7 @@ int	Server::accept_connection(size_t location)
 		if ((err = getnameinfo((struct sockaddr*)&c_addr, sizeof(c_addr), host, NI_MAXHOST, NULL, 0, 0)) != 0)
 			perror("getnameinfo: ");
 		else
-			std::cout << "Hostname: " << host << std::endl;
-		// _clients[new_fd] = new Client(new_fd, remoteIP, host);
-		
+			std::cout << "Hostname: " << host << std::endl;		
 		if ((fcntl(new_fd, F_SETFL, O_NONBLOCK)) < 0)
 		{
 			perror("fcntl: ");
@@ -222,7 +220,14 @@ void	Server::run()
 						if (p.state() == VALID_CMD || p.state() == DUMP_CMD)
 							storage.reset();
 						storage.append(buff + i, count - i);
-						++_iter;
+						if (!_data->is_connected(_iter->fd))
+						{
+							close(_iter->fd);
+							bufmap.erase(_iter->fd);
+							_iter = _pfds.erase(_iter);
+						}
+						else
+							++_iter;
 					}
 				}
 		}
