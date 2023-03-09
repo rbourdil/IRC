@@ -202,7 +202,7 @@ class	Data {
 			_channels.insert(std::make_pair(name, Channel(mode)));
 		}
 
-		void	remove_channel(const std::string& channel)
+		void	delete_channel(const std::string& channel)
 		{
 			_channels.erase(channel);
 		}
@@ -471,6 +471,25 @@ class	Data {
 
 			if (it != _channels.end())
 				return (true);
+			return (false);
+		}
+
+		int	channel_members_count(const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				return (it->second._members.size());
+			else
+				throw std::runtime_error("channel name does not exist");
+		}
+
+		bool	channel_is_empty(const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				return (it->second._members.size() == 0);
 			return (false);
 		}
 

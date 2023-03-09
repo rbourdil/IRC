@@ -285,6 +285,10 @@ void	Command::part(int fd, const std::string& channel, const std::string& messag
 			_args.push_back(_data->get_nickname(fd));
 		for (; it != members_fd.end(); ++it)
 			part_reply(*it, _args);
+		_data->remove_channel_from_user(fd, channel);
+		_data->remove_user_from_channel(fd, channel);
+		if (_data->channel_is_empty(channel))
+			_data->delete_channel(channel);
 	}
 }
 
