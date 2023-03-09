@@ -318,7 +318,7 @@ class	Data {
 			if (it != _clients.end())
 				return (it->second._nickname);
 			else
-				throw std::runtime_error("no account registered with this file descriptor");
+				throw std::runtime_error("get_nickname: no account registered with this file descriptor");
 		}
 
 		const std::string&	get_hostname(int fd) const
@@ -328,7 +328,7 @@ class	Data {
 			if (it != _clients.end())
 				return (it->second._hostname);
 			else
-				throw std::runtime_error("no account registered with this file descriptor");
+				throw std::runtime_error("get_hostname: no account registered with this file descriptor");
 		}
 
 		std::set<int>	get_friends(int fd) const
@@ -350,7 +350,7 @@ class	Data {
 				return (friends);
 			}
 			else
-				throw std::runtime_error("no account registered with this file descriptor");
+				throw std::runtime_error("get_friends: no account registered with this file descriptor");
 		}
 
 		bool	is_in_channel(int fd, const std::string& channel) const
@@ -383,7 +383,7 @@ class	Data {
 				return (info);
 			}
 			else
-				throw std::runtime_error("no account registered with this file descriptor");
+				throw std::runtime_error("get_user_info: no account registered with this file descriptor");
 		}	
 
 		bool	check_user_state(int fd, int state) const
@@ -393,7 +393,7 @@ class	Data {
 			if (it != _clients.end())
 				return (it->second._state & state);
 			else
-				throw std::runtime_error("no account registered with this file descriptor");
+				throw std::runtime_error("check_user_status: no account registered with this file descriptor");
 
 		}
 
@@ -404,7 +404,7 @@ class	Data {
 			if (it != _clients.end())
 				return (it->second._state == REGISTERED_STATE);
 			else
-				throw std::runtime_error("no account registered with this file descriptor");
+				throw std::runtime_error("is_registered: no account registered with this file descriptor");
 		}
 
 		int	get_user_fd(const std::string& nick) const
@@ -414,7 +414,7 @@ class	Data {
 			if (it != _nick_to_fd.end())
 				return (it->second);
 			else
-				throw std::runtime_error("no account registered with this file descriptor");
+				throw std::runtime_error("get_user_fd: no account registered with this file descriptor");
 		}
 
 		const std::set<std::string>&	get_user_channel_list(int fd) const
@@ -424,7 +424,7 @@ class	Data {
 			if (it != _clients.end())
 				return (it->second._channels);
 			else
-				throw std::runtime_error("no account registered with this file descriptor");
+				throw std::runtime_error("get_user_channel_list: no account registered with this file descriptor");
 		}
 
 		// check if flag 'flag' is present in the user mode attribute
@@ -435,7 +435,7 @@ class	Data {
 			if (it != _clients.end())
 				return (it->second._mode & flags);
 			else
-				throw std::runtime_error("no account registered with this file descriptor");
+				throw std::runtime_error("check_user_flags: no account registered with this file descriptor");
 		}
 
 		std::string	get_user_flags_str(int fd) const
@@ -470,7 +470,7 @@ class	Data {
 			if (it != _clients.end())
 				return (it->second._channels.size());
 			else
-				throw std::runtime_error("no account registered with this file descriptor");
+				throw std::runtime_error("get_user_flags_str: no account registered with this file descriptor");
 		}
 
 			// channel lookup
@@ -490,7 +490,7 @@ class	Data {
 			if (it != _channels.end())
 				return (it->second._members.size());
 			else
-				throw std::runtime_error("channel name does not exist");
+				throw std::runtime_error("channel_members_count: channel name does not exist");
 		}
 
 		bool	channel_is_empty(const std::string& channel) const
@@ -521,7 +521,7 @@ class	Data {
 			if (it != _channels.end())
 				return (it->second._topic);
 			else
-				throw std::runtime_error("channel name does not exist");
+				throw std::runtime_error("get_channel_topic: channel name does not exist");
 		}
 
 		const std::string&	get_channel_key(const std::string& channel) const
@@ -531,7 +531,7 @@ class	Data {
 			if (it != _channels.end())
 				return (it->second._key);
 			else
-				throw std::runtime_error("channel name does not exist");
+				throw std::runtime_error("get_channel_key: channel name does not exist");
 		}
 
 		bool	check_channel_flags(const std::string& channel, int flags) const
@@ -541,7 +541,7 @@ class	Data {
 			if (it != _channels.end())
 				return (it->second._mode & flags);
 			else
-				throw std::runtime_error("channel name does not exist");
+				throw std::runtime_error("check_channel_flags: channel name does not exist");
 		}
 
 		bool	check_member_status(const std::string& channel, int fd, int status) const
@@ -570,7 +570,7 @@ class	Data {
 				return (members);
 			}
 			else
-				throw std::runtime_error("channel name does not exist");
+				throw std::runtime_error("get_members_list_fd: channel name does not exist");
 		}
 
 		std::vector<std::string>	get_members_list_str(const std::string& channel) const
@@ -586,7 +586,7 @@ class	Data {
 				return (members);
 			}
 			else
-				throw std::runtime_error("channel name does not exist");
+				throw std::runtime_error("get_members_list_str: channel name does not exist");
 		}
 
 		bool	channel_authenticate(const std::string& channel, const std::string& key) const
