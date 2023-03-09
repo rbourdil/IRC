@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 19:47:15 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/01 21:51:58 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/09 13:45:54 by rbourdil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,10 +19,8 @@ SocketServer::SocketServer(const char *port) : _port(port)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	int status;
-	if ((status = getaddrinfo(NULL, _port, &hints, &servinfo)) != 0)
+	if (getaddrinfo(NULL, _port, &hints, &servinfo) != 0)
 	{
-		std::cout << "here" << std::endl;
 		perror("getaddrinfo:");
 		exit(1);
 	}
@@ -32,7 +30,6 @@ SocketServer::SocketServer(const char *port) : _port(port)
 
 SocketServer::~SocketServer()
 {
-	std::cout << "here here here" << std::endl;
 	if (listener > 0)
 	{
 		shutdown(listener, 2);
@@ -42,7 +39,6 @@ SocketServer::~SocketServer()
 
 void	SocketServer::socket_bind()
 {
-	int	status;
 	for (p = servinfo; p != NULL; p = p->ai_next)
 	{
 		if ((listener = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
@@ -58,7 +54,7 @@ void	SocketServer::socket_bind()
 			perror("fcntl:");
 			exit(1);
 		}
-		if ((status = bind(listener, p->ai_addr, p->ai_addrlen)) == -1)
+		if (bind(listener, p->ai_addr, p->ai_addrlen) == -1)
 			continue;
 		break;
 	}

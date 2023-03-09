@@ -14,7 +14,7 @@ void	err_no_nicknamegive(int dest_fd, const std::vector<std::string> args);
 void	err_erroneus_nickname(int dest_fd, const std::vector<std::string> args);
 void	err_nickname_inuse(int dest_fd, const std::vector<std::string> args);
 void	err_restricted(int dest_fd, const std::vector<std::string> args);
-void	err_passwd_mistmatch(int dest_fd, const std::vector<std::string> args);
+void	err_passwd_mismatch(int dest_fd, const std::vector<std::string> args);
 void	err_umode_unknownflag(int dest_fd, const std::vector<std::string> args);
 void	err_users_dontmatch(int dest_fd, const std::vector<std::string> args);
 void	err_invite_onlychan(int dest_fd, const std::vector<std::string> args);
@@ -86,5 +86,9 @@ void	rpl_endof_users(int dest_fd, const std::vector<std::string> args);
 
 void	rpl_youreoper(int dest_fd, const std::vector<std::string> args);
 
+void	join_reply(int dest_fd, const std::vector<std::string>& args);
+void	part_reply(int dest_fd, const std::vector<std::string>& args);
+
+void	error_quit(int dest_fd, const std::vector<std::string>& args);
 
 #endif

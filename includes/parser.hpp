@@ -89,6 +89,7 @@ bool	valid_nickname(const std::string&);
 bool	valid_username(const std::string&);
 bool	valid_mode(const std::string&);
 bool	valid_channel(const std::string&);
+bool	valid_key(const std::string&);
 
 std::vector<std::string>	parse_list(const std::string&);
 

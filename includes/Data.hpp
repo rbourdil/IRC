@@ -65,9 +65,9 @@ struct	Channel {
 	std::string			_key;
 	std::map<int, int>	_members;
 	int					_mode;
-	int					_members_limit;
+	unsigned int		_members_limit;
 
-	Channel(int mode) : _type(type), _mode(mode), _members_limit(0) { }
+	Channel(int mode) : _mode(mode), _members_limit(0) { }
 
 };
 
@@ -107,12 +107,15 @@ class	Data {
 			_clients.insert(std::make_pair(fd, Client(hostname, hostaddress)));
 		}
 
-		void	delete_user(int fd)
+		void	delete_user(int fd) // deletes user and removes it from any channel it belongs
 		{
 			client_iterator	it;
 			it = _clients.find(fd);
 			if (it != _clients.end())
 			{
+				std::set<std::string>::iterator	itc = it->second._channels.begin();
+				for (; itc !=  it->second._channels.end(); ++itc)
+					remove_user_from_channel(fd, *itc);
 				_nick_to_fd.erase(it->second._nickname);
 				_clients.erase(it);
 			}
@@ -309,6 +312,53 @@ class	Data {
 				throw std::runtime_error("no account registered with this file descriptor");
 		}
 
+		const std::string&	get_hostname(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+				return (it->second._hostname);
+			else
+				throw std::runtime_error("no account registered with this file descriptor");
+		}
+
+		std::set<int>	get_friends(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+			{
+				const std::set<std::string>&			channels = it->second._channels;
+				std::set<std::string>::const_iterator	itc = channels.begin();
+				std::set<int>							friends;
+				for (; itc != channels.end(); ++itc)
+				{
+					std::vector<int>					members_fd = get_members_list_fd(*itc);
+					std::vector<int>::const_iterator	itm = members_fd.begin();
+					for (; itm != members_fd.end(); ++itm)
+						friends.insert(*itm);
+				}
+				return (friends);
+			}
+			else
+				throw std::runtime_error("no account registered with this file descriptor");
+		}
+
+		bool	is_in_channel(int fd, const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+			{
+				const std::map<int, int>&	members_cpy = it->second._members;
+				if (members_cpy.find(fd) != members_cpy.end())
+					return (true);
+				else
+					return (false);
+			}
+			return (false);
+		}
+
 		std::string	get_user_info(int fd) const
 		{
 			client_const_iterator	it = _clients.find(fd);
@@ -430,7 +480,7 @@ class	Data {
 
 			if (it != _channels.end())
 			{
-				if ((it->second.mode & USER_LIMIT_CFLAG) != 0 && it->second._members.size() >= members_limit)
+				if ((it->second._mode & USER_LIMIT_CFLAG) != 0 && it->second._members.size() >= it->second._members_limit)
 					return (true);
 			}
 			return (false);
@@ -476,6 +526,22 @@ class	Data {
 				std::map<int, int>::const_iterator	itm = it->second._members.begin();
 				for (; itm != it->second._members.end(); itm++)
 					members.push_back(itm->first);
+				return (members);
+			}
+			else
+				throw std::runtime_error("channel name does not exist");
+		}
+
+		std::vector<std::string>	get_members_list_str(const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+			{
+				std::vector<std::string>	members;
+				std::map<int, int>::const_iterator	itm = it->second._members.begin();
+				for (; itm != it->second._members.end(); itm++)
+					members.push_back(get_nickname(itm->first));
 				return (members);
 			}
 			else

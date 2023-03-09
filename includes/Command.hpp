@@ -8,6 +8,7 @@
 #include "cmd_structs.hpp"
 #include "headers.hpp"
 #include "parser.hpp"
+#include "Reply.hpp"
 
 class	Command {
 
@@ -24,21 +25,24 @@ class	Command {
 		void	nick(int fd, const std::vector<std::string>& params);
 		void	user(int fd, const std::vector<std::string>& params);
 		void	mode(int fd, const std::vector<std::string>& params);
-		void	quit(int fd, const std::vector<std::string>& params);
-		void	join(int fd, const std::vector<std::string>& params);
+		void	join(int fd, std::string channel, std::string key);
+		void	part(int fd, const std::string& channel, const std::string& message);
 
 		// helper functions
-		void	join_dispatch(fd, const std::vector<std::string>& params);
+		void	quit_dispatch(int fd, const std::vector<std::string>& params);
+		void	join_dispatch(int fd, const std::vector<std::string>& params);
+		void	part_dispatch(int fd, const std::vector<std::string>& params);
+		
 		std::string	mode_str(int fd);
 
 	public:
 
 		Command(Data* data);
 
-		Reply	out(void) const;
-		void	reset(void); // to do after each call of 'execute_cmd'
 		void	execute_cmd(int fd, const irc_cmd& cmd);
 				
 };
+
+std::string	get_id(void);
 
 #endif

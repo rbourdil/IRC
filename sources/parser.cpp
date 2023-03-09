@@ -127,7 +127,7 @@ bool	valid_mode(const std::string& mode)
 	return (true);
 }
 
-bool	valid_channel(const std::string channel)
+bool	valid_channel(const std::string& channel)
 {
 	std::string::const_iterator	it = channel.begin();
 
@@ -142,10 +142,24 @@ bool	valid_channel(const std::string channel)
 	return (true);
 }
 
+bool	valid_key(const std::string& key)
+{
+	std::string::const_iterator	it = key.begin();
+
+	if (key.empty())
+		return (false);
+	while (it != key.end() && *it != '\f' && *it != '\t' && *it != '\v')
+		it++;
+	std::string::difference_type	len = it - key.begin();
+	if (it != key.end() || len == 0 || len > 23)
+		return (false);
+	return (true);
+}
+
 std::vector<std::string>	parse_list(const std::string& list)
 {
 	std::vector<std::string>	items;
-	std::string::const_iterator	start = current = list.begin();
+	std::string::const_iterator	start, current = list.begin();
 
 	while (current != list.end())
 	{

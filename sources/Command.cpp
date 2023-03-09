@@ -145,14 +145,6 @@ void	Command::mode(int fd, const std::vector<std::string>& params)
 	}
 }
 
-void	Command::quit(int fd, const std::vector<std::string>& params)
-{
-	_args.push_back(_data->get_srvname());
-	if (params.size() > 0)
-		_args.push_back(params[0]);
-	// call error quit function
-}
-
 void	Command::join(int fd, std::string channel, std::string key)
 {
 	if (!valid_channel(channel))
@@ -169,11 +161,11 @@ void	Command::join(int fd, std::string channel, std::string key)
 	}
 	else if (channel == "0")
 	{
-		const std::set<std::string>&	channel_list = get_user_channel_list(fd);
+		const std::set<std::string>&	channel_list = _data->get_user_channel_list(fd);
 		std::set<std::string>::const_iterator	it = channel_list.begin();
 		while (it != channel_list.end())
 		{
-			part(fd, *it);
+			part(fd, *it, std::string());
 			it++;
 		}
 	}
@@ -196,7 +188,7 @@ void	Command::join(int fd, std::string channel, std::string key)
 			_data->set_member_status(channel, fd, OPER_MFLAG);
 		if (channel[0] == '!')
 			_data->set_member_status(channel, fd, CREATOR_MFLAG);
-		_args.push_back(_data->get_nickname(fd));
+		_args.push_back(_data->get_user_info(fd));
 		_args.push_back(channel);
 		join_reply(fd, _args);
 		rpl_notopic(fd, _args);
@@ -223,19 +215,68 @@ void	Command::join(int fd, std::string channel, std::string key)
 	else // user joins an existing channel
 	{
 		_data->add_user_to_channel(fd, channel);
-		std::vector<int>	members = get_members_list_fd(channel);	
-		std::vector<int>	it = members.begin();
-		_args.push_back(_data->get_nickname(fd));
+		std::vector<int>			members_fd = _data->get_members_list_fd(channel);	
+		std::vector<int>::iterator	it = members_fd.begin();
+		_args.push_back(_data->get_user_info(fd));
 		_args.push_back(channel);
-		for (; it != members.end(); it++)
-		{
+		for (; it != members_fd.end(); it++)
 			join_reply(*it, _args);
-			// need to broadcast the news
-
-
+		_args.push_back(_data->get_channel_topic(channel));
+		rpl_topic(fd, _args);
+		_args.pop_back();
+		std::vector<std::string>	members_str = _data->get_members_list_str(channel);
+		_args.insert(_args.end(), members_str.begin(), members_str.end());
+		rpl_nam_reply(fd, _args);
+	}
 	// implement ban masks
+}
+
+void	Command::part(int fd, const std::string& channel, const std::string& message)
+{
+	if (!valid_channel(channel) || !_data->channel_exists(channel))
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back(channel);
+		err_nosuch_channel(fd, _args);
+	}
+	else if (!_data->is_in_channel(fd, channel))
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back(channel);
+		err_noton_channel(fd, _args);
+	}
+	else
+	{
+		std::vector<int>	members_fd = _data->get_members_list_fd(channel);
+		std::vector<int>::iterator	it = members_fd.begin();
+		_args.push_back(_data->get_user_info(fd));
+		_args.push_back(channel);
+		if (!message.empty())
+			_args.push_back(message);
+		else
+			_args.push_back(_data->get_nickname(fd));
+		for (; it != members_fd.end(); ++it)
+			part_reply(*it, _args);
+	}
+}
+
 	
 // helper functions
+
+void	Command::quit_dispatch(int fd, const std::vector<std::string>& params)
+{
+	std::set<int>					friends = _data->get_friends(fd);
+	std::set<int>::const_iterator	it = friends.begin();
+
+	_data->delete_user(fd);
+	_args.push_back(_data->get_srvname());
+	_args.push_back(_data->get_hostname(fd));
+	if (params.size() > 0)
+		_args.push_back(params[0]);
+	for (; it != friends.end(); ++it)
+		error_quit(*it, _args);
+	//severe connection
+}
 
 void	Command::join_dispatch(int fd, const std::vector<std::string>& params)
 {
@@ -256,13 +297,33 @@ void	Command::join_dispatch(int fd, const std::vector<std::string>& params)
 		if (params.size() == 2)
 			keys = parse_list(params[1]);
 		std::vector<std::string>::iterator	itc, itk;
-		for (itc = channels.begin(), itk = keys.begin(); itc != channels.end(), itk != keys.end(); itc++, itk++)
+		for (itc = channels.begin(), itk = keys.begin(); itc != channels.end() && itk != keys.end(); itc++, itk++)
 		{
 			join(fd, *itc, *itk);
 		}
 		for (; itc != channels.end(); itc++)
 			join(fd, *itc, std::string());
 	}	
+}
+
+void	Command::part_dispatch(int fd, const std::vector<std::string>& params)
+{
+	if (params.size() < 1)
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back("PART");
+		err_need_moreparams(fd, _args);
+	}
+	else
+	{
+		std::vector<std::string>	channels = parse_list(params[0]);
+		std::string					message;
+		if (params.size() == 2)
+			message = params[1];
+		std::vector<std::string>::iterator	itc;
+		for (itc = channels.begin(); itc != channels.end(); ++itc)
+			part(fd, *itc, message);	
+	}
 }
 
 std::string	Command::mode_str(int fd)
@@ -300,20 +361,9 @@ Command::Command(Data* data) : _data(data)
 	_cmd_map.insert(std::make_pair("NICK", &Command::nick));
 	_cmd_map.insert(std::make_pair("USER", &Command::user));
 	_cmd_map.insert(std::make_pair("MODE", &Command::mode));
-	_cmd_map.insert(std::make_pair("QUIT", &Command::quit));
+	_cmd_map.insert(std::make_pair("QUIT", &Command::quit_dispatch));
 	_cmd_map.insert(std::make_pair("JOIN", &Command::join_dispatch));
-}
-
-Reply	Command::out(void) const
-{
-	return (_rpl);
-}
-
-void	Command::reset(void) // to do after each call of 'execute_cmd'
-{
-	_rpl._rplnum = 0;
-	_rpl._dest.clear();
-	_rpl._args.clear();
+	_cmd_map.insert(std::make_pair("PART", &Command::part_dispatch));
 }
 
 void	Command::execute_cmd(int fd, const irc_cmd& cmd)
@@ -324,8 +374,8 @@ void	Command::execute_cmd(int fd, const irc_cmd& cmd)
 		(this->*(it->second))(fd, cmd._params);	
 	else
 	{
-		add_dest(fd);
-		add_arg(cmd._cmd);
-		set_rplnum(ERR_UNKNOWNCOMMAND);
+		_args.push_back(_data->get_srvname());
+		_args.push_back(cmd._cmd);
+		err_unknown_command(fd, _args);
 	}
 }

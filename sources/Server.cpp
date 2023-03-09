@@ -151,7 +151,7 @@ void	Server::run()
 		}
 		else if (poll_count == 0)
 		{
-			std::cerr << "poll timed out" << std::endl;
+			std::cout << "Timeout" << std::endl;
 			continue;
 		}	
 		if (_pfds[0].revents & POLLIN)
@@ -214,13 +214,10 @@ void	Server::run()
 						if (p.state() == VALID_CMD)
 						{
 							Command	exec(_data);
-							Reply	reply;
 							irc_cmd	cmd;
 
 							cmd = p.out();
 							exec.execute_cmd(_iter->fd, cmd);
-							reply = exec.out();
-							error_caller(reply._rplnum, reply._dest, reply._args);
 						}
 						if (p.state() == VALID_CMD || p.state() == DUMP_CMD)
 							storage.reset();

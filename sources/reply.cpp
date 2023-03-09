@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/03 16:59:07 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/08 17:42:08 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/09 13:31:27 by rbourdil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ void	error_caller(int reply_id, const std::set<int>& dest_fds, const std::vector
 		break;
 	case ERR_PASSWDMISMATCH: 
 		for (; it != dest_fds.end(); ++it)
-			err_passwd_mistmatch(*it, args);
+			err_passwd_mismatch(*it, args);
 		break;
 	case ERR_RESTRICTED:
 		for (; it != dest_fds.end(); ++it)
@@ -508,7 +508,7 @@ void	err_restricted(int dest_fd, const std::vector<std::string> args)
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 // 464
-void	err_passwd_mistmatch(int dest_fd, const std::vector<std::string> args)
+void	err_passwd_mismatch(int dest_fd, const std::vector<std::string> args)
 {
 	if (args.size() > 2)
 	{
@@ -1056,9 +1056,31 @@ void	rpl_endof_users(int dest_fd, const std::vector<std::string> args)
 
 // command style replies
 
-void	join_reply(int fd, const std::vector<std::string>& args)
+void	join_reply(int dest_fd, const std::vector<std::string>& args)
 {
 	std::string	prefix = ":" + args[0];
 	std::string	err_message = prefix + " JOIN " + args[1] + "\n";
+	send(dest_fd, err_message.c_str(), err_message.size(), 0);
+}
+
+void	part_reply(int dest_fd, const std::vector<std::string>& args)
+{
+	std::string	prefix = ":" + args[0];
+	std::string	err_message = prefix + " PART " + args[1] + " :" + args[2];
+	send(dest_fd, err_message.c_str(), err_message.size(), 0);
+}
+
+
+// OTHER ERRORS
+
+void	error_quit(int dest_fd, const std::vector<std::string>& args)
+{
+	std::string	prefix = ":" + args[0];
+	std::string	err_message = prefix + " ERROR: Closing link: " + args[1];
+	if (args.size() == 3)
+	{
+		std::string	suffix = " (QUIT: " + args[2] + ")";
+		err_message += suffix;
+	}
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
