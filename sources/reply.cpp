@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/03 16:59:07 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/09 17:04:38 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/09 17:36:42 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -987,7 +987,7 @@ void	join_reply(int dest_fd, const std::vector<std::string>& args)
 void	part_reply(int dest_fd, const std::vector<std::string>& args)
 {
 	std::string	prefix = ":" + args[0];
-	std::string	err_message = prefix + " PART " + args[1] + " :" + args[2];
+	std::string	err_message = prefix + " PART " + args[1] + " :" + args[2] + "\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
