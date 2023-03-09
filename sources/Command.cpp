@@ -300,13 +300,13 @@ void	Command::quit_dispatch(int fd, const std::vector<std::string>& params)
 	std::set<int>					friends = _data->get_friends(fd);
 	std::set<int>::const_iterator	it = friends.begin();
 
-	_data->delete_user(fd);
 	_args.push_back(_data->get_srvname());
 	_args.push_back(_data->get_hostname(fd));
 	if (params.size() > 0)
 		_args.push_back(params[0]);
 	for (; it != friends.end(); ++it)
 		error_quit(*it, _args);
+	_data->delete_user(fd);
 	//severe connection
 }
 
