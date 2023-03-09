@@ -225,6 +225,7 @@ void	Server::run()
 							close(_iter->fd);
 							bufmap.erase(_iter->fd);
 							_iter = _pfds.erase(_iter);
+							std::cerr << _iter->fd << " close connection" << std::endl;
 						}
 						else
 							++_iter;
