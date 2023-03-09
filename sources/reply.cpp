@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/03 16:59:07 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/09 17:36:42 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/09 17:56:52 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -771,7 +771,7 @@ void	rpl_invite_list(int dest_fd, const std::vector<std::string> args)
 // 325
 void	rpl_uniqops(int dest_fd, const std::vector<std::string> args)
 {
-	std::string	prefix = ":" + args[0] + " ";
+	std::string	prefix = ":" + args[0] + " 325 ";
 	std::string err_message = prefix + args[1] + " " + args[2] + "\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
@@ -866,39 +866,47 @@ void	rpl_away(int dest_fd, const std::vector<std::string> args)
 // 352
 void	rpl_whoreply(int dest_fd, const std::vector<std::string> args)
 {
-	std::string	prefix = ":" + args[0] + "  ";
-	std::string err_message = prefix + args[2] + " " + args[3] + " " + args[4] + " " + args[5] + " " + args[6] + ": " + args[7] +  " " + args[8] + "\n";
+	std::string	prefix = ":" + args[0] + " 352 ";
+	std::string err_message = prefix + args[1] + " " + args[2] + " " + args[3] + " " + args[0] + " " + args[5];
+	err_message = err_message + "H@+: " + args[6] +  " " + args[7] + "\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
 // 315
 void	rpl_endof_who(int dest_fd, const std::vector<std::string> args)
 {
-	std::string	prefix = ":" + args[0] + " " + args[1];
-	std::string err_message = prefix + args[2] + " :End of WHO list\n";
+	std::string	prefix = ":" + args[0] + " 315 ";
+	std::string err_message = prefix + args[1] + " :End of WHO list\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
 // 311
 void	rpl_whois_user(int dest_fd, const std::vector<std::string> args)
 {
-	std::string	prefix = ":" + args[0] + " " + args[1];
-	std::string err_message = prefix + args[2] + args[3] + args[4] + args[5] + " * :" + args[6] + "\n";
+	std::string	prefix = ":" + args[0] + " 311 ";
+	std::string err_message = prefix + args[1] + args[2] + args[3] + args[4] + " * :" + args[5] + "\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
 // 319
 void	rpl_whois_channel(int dest_fd, const std::vector<std::string> args)
 {
-	std::string	prefix = ":" + args[0] + " " + args[1];
-	std::string err_message = prefix + args[2] + ":@" + args[3] + " + " + args[4] +"\n";
+	std::string	prefix = ":" + args[0] + " 319 ";
+	std::string err_message = prefix + args[1] + ":";
+	if (args.size() > 2)
+	{
+		err_message = err_message + args[2];
+		for (size_t i = 3; i < args.size() ; i++)
+			err_message = err_message + args[1];
+	}
+	err_message = err_message + "\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
 // 317
 void	rpl_whois_idle(int dest_fd, const std::vector<std::string> args)
 {
-	std::string	prefix = ":" + args[0] + " " + args[1];
+	std::string	prefix = ":" + args[0] + " 317 ";
 	std::string err_message = prefix + args[2] + " " + args[3] + " :seconds idle\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
@@ -906,7 +914,7 @@ void	rpl_whois_idle(int dest_fd, const std::vector<std::string> args)
 // 318
 void	rpl_endof_whois(int dest_fd, const std::vector<std::string> args)
 {
-	std::string	prefix = ":" + args[0] + " " + args[1];
+	std::string	prefix = ":" + args[0] + " 31 ";
 	std::string err_message = prefix + args[2] + " :End of WHOIS list\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
