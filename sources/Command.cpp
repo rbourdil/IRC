@@ -175,7 +175,7 @@ void	Command::join(int fd, std::string channel, std::string key)
 		_args.push_back(channel);
 		err_toomany_channels(fd, _args);
 	}
-	else if (!_data->channel_exists(channel))
+	else if (!_data->channel_exists(channel)) //user creates channel
 	{
 		if (channel[0] == '!')
 		{
@@ -194,13 +194,11 @@ void	Command::join(int fd, std::string channel, std::string key)
 		_args[0] = _data->get_srvname();
 		rpl_notopic(fd, _args);
 		_args[1] = "=" + channel;
-		std::string	nick;
+		std::string	nick = _data->get_nickname(fd);
 		if (_data->check_member_status(channel, fd, OPER_MFLAG))
-			nick = "@" + _data->get_nickname(fd);
+			nick.insert(0, "@");
 		else if (_data->check_member_status(channel, fd, VOICE_MFLAG))
-			nick = "+" + _data->get_nickname(fd);
-		else
-			nick = _data->get_nickname(fd);
+			nick.insert(0, "+");
 		_args.push_back(nick);
 		rpl_nam_reply(fd, _args);
 	}
@@ -245,13 +243,15 @@ void	Command::join(int fd, std::string channel, std::string key)
 			_args[1] = "*" + channel;
 		else if (_data->check_channel_flags(channel, SECRET_CFLAG))
 			_args[1] = "@" + channel;
+		else
+			_args[1] = "=" + channel;
 		for (it = members_fd.begin(); it != members_fd.end(); it++)
 		{
-			std::string	nick;
+			std::string	nick = _data->get_nickname(*it);
 			if (_data->check_member_status(channel, *it, OPER_MFLAG))
-				nick = "@" + _data->get_nickname(*it);
+				nick.insert(0, "@");
 			else if (_data->check_member_status(channel, *it, VOICE_MFLAG))
-				nick = "+" + _data->get_nickname(*it);
+				nick.insert(0, "+");
 			_args.push_back(nick);
 		}
 		rpl_nam_reply(fd, _args);
