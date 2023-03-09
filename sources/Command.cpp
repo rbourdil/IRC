@@ -191,8 +191,18 @@ void	Command::join(int fd, std::string channel, std::string key)
 		_args.push_back(_data->get_user_info(fd));
 		_args.push_back(channel);
 		join_reply(fd, _args);
+		_args[0] = _data->get_srvname();
 		rpl_notopic(fd, _args);
-		rpl_nam_reply(fd, _args); // need to modify prototype to accept maps
+		_args[1] = "=" + channel;
+		std::string	nick;
+		if (_data->check_member_status(channel, fd, OPER_MFLAG))
+			nick = "@" + _data->get_nickname(fd);
+		else if (_data->check_member_status(channel, fd, VOICE_MFLAG))
+			nick = "+" + _data->get_nickname(fd);
+		else
+			nick = _data->get_nickname(fd);
+		_args.push_back(nick);
+		rpl_nam_reply(fd, _args);
 	}
 	else if (_data->check_channel_flags(channel, INVITE_ONLY_CFLAG))
 	{
@@ -221,11 +231,29 @@ void	Command::join(int fd, std::string channel, std::string key)
 		_args.push_back(channel);
 		for (; it != members_fd.end(); it++)
 			join_reply(*it, _args);
-		_args.push_back(_data->get_channel_topic(channel));
-		rpl_topic(fd, _args);
-		_args.pop_back();
-		std::vector<std::string>	members_str = _data->get_members_list_str(channel);
-		_args.insert(_args.end(), members_str.begin(), members_str.end());
+		_args[0] = _data->get_srvname();
+		std::string	topic = _data->get_channel_topic(channel);
+		if (!topic.empty())
+		{
+			_args.push_back(topic);
+			rpl_topic(fd, _args);
+			_args.pop_back();
+		}
+		else
+			rpl_notopic(fd, _args);
+		if (_data->check_channel_flags(channel, PRIVATE_CFLAG))
+			_args[1] = "*" + channel;
+		else if (_data->check_channel_flags(channel, SECRET_CFLAG))
+			_args[1] = "@" + channel;
+		for (it = members_fd.begin(); it != members_fd.end(); it++)
+		{
+			std::string	nick;
+			if (_data->check_member_status(channel, *it, OPER_MFLAG))
+				nick = "@" + _data->get_nickname(*it);
+			else if (_data->check_member_status(channel, *it, VOICE_MFLAG))
+				nick = "+" + _data->get_nickname(*it);
+			_args.push_back(nick);
+		}
 		rpl_nam_reply(fd, _args);
 	}
 	// implement ban masks

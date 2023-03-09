@@ -516,6 +516,19 @@ class	Data {
 				throw std::runtime_error("channel name does not exist");
 		}
 
+		bool	check_member_status(const std::string& channel, int fd, int status) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+			{
+				std::map<int, int>::const_iterator	itm = it->second._members.find(fd);
+				if (itm != it->second._members.find(fd))
+					return (itm->second & status);
+			}
+			return (false);
+		}
+
 		std::vector<int>	get_members_list_fd(const std::string& channel) const
 		{
 			channel_const_iterator	it = _channels.find(channel);
