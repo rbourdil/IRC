@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/03 16:59:07 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/09 13:31:27 by rbourdil         ###   ########.fr       */
+/*   Updated: 2023/03/09 15:34:32 by rbourdil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -795,8 +795,8 @@ void	err_filerror(int dest_fd, const std::vector<std::string> args)
 
 void	rpl_welcome_message(int dest_fd, const std::vector<std::string> args)
 {
-	std::string	prefix = ":" + args[0] + " " + args[1];
-	std::string err_message = prefix + " Welcome to the Internet Relay Network, " + args[2] + "\n";
+	std::string	prefix = ":" + args[0] + " 001 RPL_WELCOME ";
+	std::string err_message = prefix + ":Welcome to the Internet Relay Network, " + args[1] + "\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -817,8 +817,8 @@ void	rpl_umodeis(int dest_fd, const std::vector<std::string> args)
 // 332
 void	rpl_topic(int dest_fd, const std::vector<std::string> args)
 {
-	std::string	prefix = ":" + args[0] + " " + args[1];
-	std::string err_message = prefix + args[2] + " :" + args[3] + "\n";
+	std::string	prefix = ":" + args[0] + " 332 RPL_TOPIC ";
+	std::string err_message = prefix + args[1] + " :" + args[2] + "\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -889,8 +889,8 @@ void	rpl_endof_invitelist(int dest_fd, const std::vector<std::string> args)
 // 331
 void	rpl_notopic(int dest_fd, const std::vector<std::string> args)
 {
-	std::string	prefix = ":" + args[0] + " " + args[1];
-	std::string err_message = prefix + args[2] + " :No topic is set\n";
+	std::string	prefix = ":" + args[0] + " 331 RPL_NOTOPIC ";
+	std::string err_message = prefix + args[1] + " :No topic is set\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);		
 }
 
