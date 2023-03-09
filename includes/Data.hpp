@@ -287,6 +287,15 @@ class	Data {
 			return (_srvname);
 		}
 
+		bool	is_connected(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+				return (true);
+			return (false);
+		}
+
 			// user lookup
 		bool	compare_passwd(const std::string& passwd) const
 		{
