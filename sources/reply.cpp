@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/03 16:59:07 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/09 15:34:32 by rbourdil         ###   ########.fr       */
+/*   Updated: 2023/03/09 16:11:58 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -817,7 +817,7 @@ void	rpl_umodeis(int dest_fd, const std::vector<std::string> args)
 // 332
 void	rpl_topic(int dest_fd, const std::vector<std::string> args)
 {
-	std::string	prefix = ":" + args[0] + " 332 RPL_TOPIC ";
+	std::string	prefix = ":" + args[0] + " 332 ";
 	std::string err_message = prefix + args[1] + " :" + args[2] + "\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
@@ -897,9 +897,16 @@ void	rpl_notopic(int dest_fd, const std::vector<std::string> args)
 // 353
 void	rpl_nam_reply(int dest_fd, const std::vector<std::string> args)
 {
-	//MEOOOOOOWWWW
-	(void)dest_fd;
-	(void)args;
+	std::string	prefix = ":" + args[0] + " 353 ";
+	std::string err_message = prefix + args[1] + " :";
+	if (args.size() > 2)
+	{
+		err_message = err_message + args[2];
+		for (size_t i = 3; i < args.size(); i++)
+			err_message = err_message + " " + args[i];
+	}
+	err_message = err_message +" \n";
+	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
 // 366
@@ -907,7 +914,7 @@ void	rpl_endof_names(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " " + args[1];
 	std::string err_message = prefix + args[2] + " :End of NAMES list\n";
-	send(dest_fd, err_message.c_str(), err_message.size(), 0);			
+	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
 // 322
