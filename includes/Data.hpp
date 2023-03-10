@@ -68,6 +68,9 @@ struct	Channel {
 	std::string			_key;
 	std::map<int, int>	_members;
 	int					_mode;
+	std::string			_ban_mask;
+	std::string			_except_mask;
+	std::string			_invit_mask;
 	unsigned int		_members_limit;
 
 	Channel(int mode) : _mode(mode), _members_limit(0) { }
@@ -553,6 +556,36 @@ class	Data {
 				throw std::runtime_error("get_channel_key: channel name does not exist");
 		}
 
+		const std::string&	get_ban_mask(const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				return (it->second._ban_mask);
+			else
+				throw std::runtime_error("get_ban_mask: channel name does not exist");
+		}
+
+		const std::string&	get_except_mask(const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				return (it->second._except_mask);
+			else
+				throw std::runtime_error("get_except_mask: channel name does not exist");
+		}
+
+		const std::string&	get_invit_mask(const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				return (it->second._invit_mask);
+			else
+				throw std::runtime_error("get_invit_mask: channel name does not exist");
+		}
+
 		bool	check_channel_flags(const std::string& channel, int flags) const
 		{
 			channel_const_iterator	it = _channels.find(channel);
@@ -621,6 +654,45 @@ class	Data {
 			return (false);
 		}
 
+		std::string	get_channel_flags_str(const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+			std::string				flags("+");
+
+			if (it != _channels.end())
+			{
+				int	mode = it->second._mode;
+				if (mode & ANON_CFLAG)
+					flags += "a";
+				if (mode & INVITE_ONLY_CFLAG)
+					flags += "i";
+				if (mode & MODERATED_CFLAG)
+					flags += "m";
+				if (mode & NO_MESSAGES_CFLAG)
+					flags += "n";
+				if (mode & QUIET_CFLAG)
+					flags += "q";
+				if (mode & PRIVATE_CFLAG)
+					flags += "p";
+				if (mode & SECRET_CFLAG)
+					flags += "s";
+				if (mode & SRV_REOP_CFLAG)
+					flags += "r";
+				if (mode & TOPIC_OPER_CFLAG)
+					flags += "t";
+				if (mode & KEY_CFLAG)
+					flags += "k";
+				if (mode & USER_LIMIT_CFLAG)
+					flags += "l";
+				if (mode & BAN_MASK_CFLAG)
+					flags += "b";
+				if (mode & EXCEPT_MASK_CFLAG)
+					flags += "e";
+				if (mode & INVIT_MASK_CFLAG)
+					flags += "I";
+			}
+			return (flags);
+		}
 
 		// DEBUG
 

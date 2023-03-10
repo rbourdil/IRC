@@ -83,8 +83,9 @@ bool	valid_nickname(const std::string& nick)
 
 	if (nick.empty())
 		return (false);
-	if (isdigit(*it) || isspecial(*it))
-		it++;
+	if (!isalpha(*it) && !isspecial(*it))
+		return (false);
+	it++;
 	for (int count = 0; it != nick.end() && count < 8; it++)
 	{
 		if (!isdigit(*it) && !isalpha(*it) && !isspecial(*it) && *it != '-')
@@ -111,7 +112,7 @@ bool	valid_username(const std::string& user)
 	return (true);
 }
 
-bool	valid_mode(const std::string& mode)
+bool	valid_user_mode(const std::string& mode)
 {
 	std::string::const_iterator	it = mode.begin();
 
@@ -127,14 +128,32 @@ bool	valid_mode(const std::string& mode)
 	return (true);
 }
 
+int	valid_channel_mode(const std::string& mode)
+{
+	std::string::const_iterator	it = mode.begin();
+
+	if (mode.empty())
+		return (false);
+	if (*it == '+' || *it == '-')
+		++it;
+	while (*it == 'O' || *it == 'o' || *it == 'v' || *it == 'a' || *it == 'i' || *it == 'm' \
+		|| *it == 'n' || *it == 'q' || *it == 'p' || *it == 's' || *it == 'r' || *it == 't' \
+		|| *it == 'k' || *it == 'l' || *it == 'b' || *it == 'e' || *it == 'I')
+		++it;
+	if (it != mode.end())
+		return (*it);
+	return (0);
+}
+
 bool	valid_channel(const std::string& channel)
 {
 	std::string::const_iterator	it = channel.begin();
 
 	if (channel.empty())
 		return (false);
-	if (*it == '#' || *it == '+' || *it == '&' || *it == '!')
-		it++;
+	if (*it != '#' && *it != '+' && *it != '&' && *it != '!')
+		return (false);
+	it++;
 	while (it != channel.end() && *it != '\a')
 		it++;
 	if (((it - channel.begin()) > 50) || it != channel.end())

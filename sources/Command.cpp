@@ -28,7 +28,7 @@ void	Command::nick(int fd, const std::vector<std::string>& params)
 	_args.push_back(_data->get_srvname());
 	if (params.size() == 0)
 		err_no_nicknamegive(fd, _args);
-	else if (!valid_nickname(params[0]))
+	else if (!valid_nickname(params[0]) || params[0] == "anonymous")
 	{
 		_args.push_back(params[0]);
 		err_erroneus_nickname(fd, _args);
@@ -84,24 +84,17 @@ void	Command::user(int fd, const std::vector<std::string>& params)
 	}
 }
 
-void	Command::mode(int fd, const std::vector<std::string>& params)
+void	Command::user_mode(int fd, const std::vector<std::string>& params)
 {
 	_args.push_back(_data->get_srvname());
-	if (!_data->is_registered(fd))
-		err_not_registered(fd, _args);
-	else if (params.size() < 1)
-	{
-		_args.push_back("MODE");
-		err_need_moreparams(fd, _args);
-	}
-	else if (params[0] != _data->get_nickname(fd))
+	if (params[0] != _data->get_nickname(fd))
 		err_users_dontmatch(fd, _args);
 	else if (params.size() == 1)
 	{
 		_args.push_back(mode_str(fd));
 		rpl_umodeis(fd, _args);
 	}
-	else if (!valid_mode(params[1]))
+	else if (!valid_user_mode(params[1]))
 		err_umode_unknownflag(fd, _args);
 	else
 	{
@@ -292,6 +285,57 @@ void	Command::part(int fd, const std::string& channel, const std::string& messag
 	}
 }
 
+void	Command::channel_mode(int fd, const std::vector<std::string>& params)
+{
+	const std::string	channel = params[0];
+	int					char_mode;
+
+	_args.push_back(_data->get_srvname());
+	if (!_data->channel_exists(channel))
+	{
+		_args.push_back(channel);
+		err_nosuch_channel(fd, _args);
+	}
+	else if (channel[0] == '+')
+	{
+		_args.push_back(channel);
+		err_nochan_modes(fd, _args);
+	}
+	else if (!_data->check_member_status(channel, fd, OPER_MFLAG))
+	{
+		_args.push_back(channel);
+		err_chano_privsneeded(fd, _args);
+	}
+	else if (params.size() == 1) // if MODE <channel> alone, list modes
+	{
+		_args.push_back(channel);
+		_args.push_back(channel_mode_str(channel));
+		rpl_channel_modeis(fd, _args);	
+	}
+	else if ((char_mode = valid_channel_mode(params[1])) != 0)
+	{
+		std::string	str_mode;
+		str_mode.push_back(char_mode);
+		_args.push_back(str_mode);
+		_args.push_back(channel);
+		err_unknown_mode(fd, _args);
+	}
+	else // channel is regonized and there are flags
+	{
+		std::vector<std::string>::const_iterator	itv = params.begin() + 1;
+		std::string					flags = params[1];
+		std::string::const_iterator	itf = flags.begin();
+		bool						add = true;
+
+		if (*itf == '+' || *itf == '-')
+		{
+			if (*itf == '-')
+				add = false;
+			itf++;
+		}
+		for (; itf != 		
+		
+
 	
 // helper functions
 
@@ -307,7 +351,7 @@ void	Command::quit_dispatch(int fd, const std::vector<std::string>& params)
 	for (; it != friends.end(); ++it)
 		error_quit(*it, _args);
 	_data->delete_user(fd);
-	//severe connection
+	// need to modify to send a part message instead for anon channels
 }
 
 void	Command::join_dispatch(int fd, const std::vector<std::string>& params)
@@ -319,6 +363,7 @@ void	Command::join_dispatch(int fd, const std::vector<std::string>& params)
 	}
 	else if (params.size() < 1)
 	{
+		_args.push_back(_data->get_srvname());
 		_args.push_back("JOIN");
 		err_need_moreparams(fd, _args);
 	}
@@ -340,7 +385,12 @@ void	Command::join_dispatch(int fd, const std::vector<std::string>& params)
 
 void	Command::part_dispatch(int fd, const std::vector<std::string>& params)
 {
-	if (params.size() < 1)
+	if (!_data->is_registered(fd))
+	{
+		_args.push_back(_data->get_srvname());
+		err_not_registered(fd);
+	}
+	else if (params.size() < 1)
 	{
 		_args.push_back(_data->get_srvname());
 		_args.push_back("PART");
@@ -358,13 +408,59 @@ void	Command::part_dispatch(int fd, const std::vector<std::string>& params)
 	}
 }
 
-std::string	Command::mode_str(int fd)
+void	Command::mode_dispatch(int fd, const std::vector<std::string>& params)
+{
+	if (!_data->is_registered(fd))
+	{
+		_args.push_back(_data->get_srvname());
+		err_not_registered(fd, _args);
+	}
+	else if (params.size() < 1)
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back("MODE");
+		err_need_moreparams(fd, _args);
+	}
+	else if (_data->nickname_exists(params[0]))
+	{
+		_args.push_back(_data->get_srvname());
+		user_mode(fd, params);
+	}
+	else
+		channel_mode(fd, params);
+}
+
+
+std::string	Command::user_mode_str(int fd)
 {
 	std::string	ret;
 
 	ret += _data->get_nickname(fd);
 	ret += " ";
 	ret += _data-> get_user_flags_str(fd);
+	return (ret);
+}
+
+std::string	Command::channel_mode_str(const std::string& channel)
+{
+	std::string	ret;
+
+	ret += _data->get_channel_flags_str(channel);
+	if (_data->check_channel_flags(channel, BAN_MASK_CFLAG))
+	{
+		ret += " ";
+		ret += _data->get_ban_mask(channel);
+	}
+	if (_data->check_channel_flags(channel, EXCEPT_MASK_CFLAG))
+	{
+		ret += " ";
+		ret += _data->get_except_mask;
+	}
+	if (_data->check_channel_flags(channel, INVIT_MASK_CFLAG))
+	{
+		ret += " ";
+		ret += _data->get_invit_mask;
+	}
 	return (ret);
 }
 

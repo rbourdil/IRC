@@ -21,20 +21,27 @@ class	Command {
 		std::vector<int>				_dests;
 		std::vector<std::string>		_args;
 
+		// user commands
 		void	pass(int fd, const std::vector<std::string>& params);
 		void	nick(int fd, const std::vector<std::string>& params);
 		void	user(int fd, const std::vector<std::string>& params);
-		void	mode(int fd, const std::vector<std::string>& params);
+		void	user_mode(int fd, const std::vector<std::string>& params);
+
+		// channel commands
 		void	join(int fd, std::string channel, std::string key);
 		void	part(int fd, const std::string& channel, const std::string& message);
+		void	channel_mode(int fd, const std::vector<std::string>& params);
 		void	topic(int fd, std::string channel, const std::vector<std::string>& params);
+
 		// helper functions
 		void	topic_dispatch(int fd, const std::vector<std::string>& params);
 		void	quit_dispatch(int fd, const std::vector<std::string>& params);
 		void	join_dispatch(int fd, const std::vector<std::string>& params);
 		void	part_dispatch(int fd, const std::vector<std::string>& params);
+		void	mode_dispatch(int fd, const std::vector<std::string>& params);
 		
-		std::string	mode_str(int fd);
+		std::string	channel_mode_str(int fd);
+		std::string	user_mode_str(int fd);
 
 	public:
 
