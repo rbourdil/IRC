@@ -319,6 +319,20 @@ class	Data {
 		}
 
 			// user lookup
+
+		std::vector<std::string>	list_users(void) const
+		{
+			std::vector<std::string>	users;
+			client_const_iterator		it = _clients.begin();
+
+			for (; it != _clients.end(); it++)
+			{
+				if ((it->second._mode & INVISIBLE_UFLAG) == 0)
+					users.push_back(it->second._nickname);
+			}
+			return (users);
+		}
+
 		bool	compare_passwd(const std::string& passwd) const
 		{
 			return (passwd == _passwd);
@@ -496,6 +510,22 @@ class	Data {
 		}
 
 			// channel lookup
+
+		std::vector<std::string>	list_visible_channels(int fd) const
+		{
+			std::vector<std::string>	channels;
+			channel_const_iterator		itc = _channels.begin();
+
+			for (; itc != _channels.end(); itc++)
+			{
+				if ((itc->second._mode & SECRET_CFLAG) == 0)
+					channels.push_back(itc->first);
+				else if (itc->second._members.find(fd) != itc->second._members.end())
+					channels.push_back(itc->first);
+			}
+			return (channels);
+		}
+
 		bool	channel_exists(const std::string& channel) const
 		{
 			channel_const_iterator	it = _channels.find(channel);

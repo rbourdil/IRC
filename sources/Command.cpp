@@ -20,8 +20,7 @@ void	Command::pass(int fd, const std::vector<std::string>& params)
 			_args.push_back(_data->get_user_info(fd));
 			rpl_welcome_message(fd, _args);
 		}
-	}
-}
+	} }
 
 void	Command::nick(int fd, const std::vector<std::string>& params)
 {
@@ -91,7 +90,7 @@ void	Command::user_mode(int fd, const std::vector<std::string>& params)
 		err_users_dontmatch(fd, _args);
 	else if (params.size() == 1)
 	{
-		_args.push_back(mode_str(fd));
+		_args.push_back(user_mode_str(fd));
 		rpl_umodeis(fd, _args);
 	}
 	else if (!valid_user_mode(params[1]))
@@ -133,7 +132,7 @@ void	Command::user_mode(int fd, const std::vector<std::string>& params)
 			_data->set_user_flags(fd, flags);
 		else
 			_data->unset_user_flags(fd, flags);
-		_args.push_back(mode_str(fd));
+		_args.push_back(user_mode_str(fd));
 		rpl_umodeis(fd, _args);
 	}
 }
@@ -312,7 +311,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 		_args.push_back(channel_mode_str(channel));
 		rpl_channel_modeis(fd, _args);	
 	}
-	else if ((char_mode = valid_channel_mode(params[1])) != 0)
+	else if ((char_mode = valid_channel_mode(params[1])) != 0) // might remove
 	{
 		std::string	str_mode;
 		str_mode.push_back(char_mode);
@@ -320,6 +319,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 		_args.push_back(channel);
 		err_unknown_mode(fd, _args);
 	}
+	/*
 	else // channel is regonized and there are flags
 	{
 		std::vector<std::string>::const_iterator	itv = params.begin() + 1;
@@ -334,6 +334,10 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 			itf++;
 		}
 		for (; itf != 		
+	*/
+
+	// the idea is to call another function that takes a char and a reference to the params iterator to eventually use a mask
+}
 		
 
 	
@@ -388,7 +392,7 @@ void	Command::part_dispatch(int fd, const std::vector<std::string>& params)
 	if (!_data->is_registered(fd))
 	{
 		_args.push_back(_data->get_srvname());
-		err_not_registered(fd);
+		err_not_registered(fd, _args);
 	}
 	else if (params.size() < 1)
 	{
@@ -454,12 +458,12 @@ std::string	Command::channel_mode_str(const std::string& channel)
 	if (_data->check_channel_flags(channel, EXCEPT_MASK_CFLAG))
 	{
 		ret += " ";
-		ret += _data->get_except_mask;
+		ret += _data->get_except_mask(channel);
 	}
 	if (_data->check_channel_flags(channel, INVIT_MASK_CFLAG))
 	{
 		ret += " ";
-		ret += _data->get_invit_mask;
+		ret += _data->get_invit_mask(channel);
 	}
 	return (ret);
 }
@@ -488,7 +492,7 @@ Command::Command(Data* data) : _data(data)
 	_cmd_map.insert(std::make_pair("PASS", &Command::pass));
 	_cmd_map.insert(std::make_pair("NICK", &Command::nick));
 	_cmd_map.insert(std::make_pair("USER", &Command::user));
-	_cmd_map.insert(std::make_pair("MODE", &Command::mode));
+	_cmd_map.insert(std::make_pair("MODE", &Command::mode_dispatch));
 	_cmd_map.insert(std::make_pair("QUIT", &Command::quit_dispatch));
 	_cmd_map.insert(std::make_pair("JOIN", &Command::join_dispatch));
 	_cmd_map.insert(std::make_pair("PART", &Command::part_dispatch));

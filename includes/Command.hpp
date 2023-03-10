@@ -40,7 +40,7 @@ class	Command {
 		void	part_dispatch(int fd, const std::vector<std::string>& params);
 		void	mode_dispatch(int fd, const std::vector<std::string>& params);
 		
-		std::string	channel_mode_str(int fd);
+		std::string	channel_mode_str(const std::string& channel);
 		std::string	user_mode_str(int fd);
 
 	public:
