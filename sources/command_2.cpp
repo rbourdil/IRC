@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/10 19:55:53 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/10 23:27:30 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@
 
 //TOPIC CHECK IF CHANNEL IS SECRET
 
-void	Command::topic_dispatch(int fd, const std::vector<std::string>& params)
+void	Command::topic(int fd, const std::vector<std::string>& params)
 {
 	_args.push_back(_data->get_srvname());
 	if (_data->is_registered(fd))
@@ -69,24 +69,71 @@ void	Command::topic_dispatch(int fd, const std::vector<std::string>& params)
 		err_not_registered(fd, _args);
 }
 
-// void	Command::names_dispatch(int fd, const std::vector<std::string>& params)
-// {
-// 	_args.push_back(_data->get_srvname());
-// 	if (_data->is_registered(fd))
-// 	{
-// 		if (params.size() == 0)
-// 		{
-// 			//it is the current 
-// 		}
-// 		std::vector<std::string>			channels = parse_list(params[0]);
-// 		std::vector<std::string>::iterator	iter = channels.begin();
-// 		for (; iter != channels.end(); ++iter)
-// 			names(fd, *iter, params);		
-// 	}
-// 	else
-// 		err_not_registered(fd, _args);
+//TODO
+//SEE where to ERR_TOOMANYMATCHES ERR_NOSUCHSERVER RPL_ENDOFNAMES
+void	Command::names_dispatch(int fd, const std::vector<std::string>& params)
+{
+	_args.push_back(_data->get_srvname());
+	if (_data->is_registered(fd))
+	{
+		if (params.size() == 0)
+		{
+			std::vector<std::string> visible_channels = _data->list_visible_channels(fd);
+			std::vector<std::string>::iterator iter_channels = visible_channels.begin();
+			for (iter_channels = visible_channels.begin(); iter_channels != visible_channels.end(); ++iter_channels)
+			{
+				_args.push_back(*iter_channels);
+				std::vector<std::string> users_channel = _data->get_members_list_str(*iter_channels);
+				std::vector<int> users_fd = _data->get_members_list_fd(*iter_channels);
+				std::vector<int>::iterator iter_fd = users_fd.begin();
+				std::vector<std::string>::iterator iter_users = users_channel.begin();
+				for (; iter_users != users_channel.end(); ++iter_users)
+				{
+					std::string user = *iter_users;
+					if (_data->check_member_status(*iter_channels, *iter_fd, OPER_MFLAG))
+						user.insert(0,"@");
+					else if(_data->check_member_status(*iter_channels, *iter_fd, VOICE_MFLAG))
+						user.insert(0, "+");
+					_args.push_back(user);
+					++iter_fd;
+				}
+				rpl_nam_reply(fd, _args);
+				_args.erase(_args.begin() + 1, _args.end());
+			}
+		}
+		else
+		{
+			std::cout << "still not implemented" << std::endl;
+			std::vector<std::string> channels = parse_list(params[0]);
+			std::vector<std::string>::iterator chan_iter = channels.begin();
+			for (chan_iter = channels.begin(); chan_iter != channels.end(); ++chan_iter)
+			{
+				_args.push_back(*chan_iter);
+				std::vector<std::string> users_channel = _data->get_members_list_str(*chan_iter);
+				std::vector<int> users_fd = _data->get_members_list_fd(*chan_iter);
+				std::vector<int>::iterator iter_fd = users_fd.begin();
+				std::vector<std::string>::iterator iter_users = users_channel.begin();
+				for (; iter_users != users_channel.end(); ++iter_users)
+				{
+					std::string user = *iter_users;
+					if (_data->check_member_status(*chan_iter, *iter_fd, OPER_MFLAG))
+						user.insert(0,"@");
+					else if(_data->check_member_status(*chan_iter, *iter_fd, VOICE_MFLAG))
+						user.insert(0, "+");
+					_args.push_back(user);
+					++iter_fd;
+				}
+				rpl_nam_reply(fd, _args);
+				_args.erase(_args.begin() + 1, _args.end());
+			}
+			
+			
+		}	
+	}
+	else
+		err_not_registered(fd, _args);
 
-// }
+}
 
 // void	Command::names(int fd, std::string channel, const std::vector<std::string>& params)
 // {

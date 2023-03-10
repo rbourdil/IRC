@@ -91,7 +91,7 @@ void	Server::handle_timeout(void)
 		double time_diff = difftime(std::time(NULL), _data->get_user_last_move(_iter->fd));
 		if (time_diff > PING_TIME && time_diff < DISCONNECT_TIME)
 		{
-			// Ping
+			std::string ping_message = "PING :server_name";
 		}
 		else if (time_diff > DISCONNECT_TIME)
 		{
