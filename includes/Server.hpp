@@ -25,7 +25,7 @@ class Server
 	void	*get_in_addr(struct sockaddr *sa);
 	void	send_data(int numbytes, int sender_fd);
 	void	del_from_pfds(pfd_iter iter);
-	void	handle_timeout(std::map<int, Buffer> &bufmap);
+	void	handle_timeout(void);
 
 	int		get_fd(int i);
 	int		accept_connection(size_t location);
