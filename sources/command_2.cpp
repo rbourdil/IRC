@@ -6,11 +6,15 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/10 18:37:49 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/10 19:51:41 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/Command.hpp"
+
+//check if i am a member of that channel
+
+//TOPIC CHECK IF CHANNEL IS SECRET
 
 void	Command::topic_dispatch(int fd, const std::vector<std::string>& params)
 {
@@ -38,7 +42,6 @@ void	Command::topic_dispatch(int fd, const std::vector<std::string>& params)
 					{
 						_args.push_back(topic);
 						rpl_topic(fd, _args);
-						_args.pop_back();
 					}
 				}
 				else
@@ -64,4 +67,30 @@ void	Command::topic_dispatch(int fd, const std::vector<std::string>& params)
 	}
 	else
 		err_not_registered(fd, _args);
+}
+
+void	Command::names_dispatch(int fd, const std::vector<std::string>& params)
+{
+	_args.push_back(_data->get_srvname());
+	if (_data->is_registered(fd))
+	{
+		if (params.size() == 0)
+		{
+			//it is the current 
+		}
+		std::vector<std::string>			channels = parse_list(params[0]);
+		std::vector<std::string>::iterator	iter = channels.begin();
+		for (; iter != channels.end(); ++iter)
+			names(fd, *iter, params);		
+	}
+	else
+		err_not_registered(fd, _args);
+
+}
+
+void	Command::names(int fd, std::string channel, const std::vector<std::string>& params)
+{
+	(void)fd;
+	(void)channel;
+	(void)params;
 }
