@@ -6,6 +6,7 @@
 #include <map>
 #include <set>
 #include <iostream>
+#include "headers.hpp"
 
 // USER_FLAGS
 #define AWAY_UFLAG 0x1
@@ -54,8 +55,10 @@ struct	Client {
 	std::string					_realname;
 	std::set<std::string>		_channels;
 	int							_mode;
+	
+	time_t						_last_move;
 
-	Client(const std::string& hostname, const std::string& hostaddress) : _state(UNREGISTERED_STATE), _hostname(hostname), _hostaddress(hostaddress), _mode(0) { }
+	Client(const std::string& hostname, const std::string& hostaddress) : _state(UNREGISTERED_STATE), _hostname(hostname), _hostaddress(hostaddress), _mode(0), _last_move(std::time(NULL)) { }
 
 };
 
@@ -154,6 +157,13 @@ class	Data {
 
 			if (it != _clients.end())
 				it->second._realname = realname;
+		}
+
+		void	set_user_last_move(int fd)
+		{
+			client_iterator it = _clients.find(fd);
+			if (it != _clients.end())
+				it->second._last_move = std::time(NULL);
 		}
 
 		void	set_user_state(int fd, int state)
@@ -282,6 +292,15 @@ class	Data {
 
 		// lookup
 		
+		time_t				get_user_last_move(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+			if (it != _clients.end())
+				return it->second._last_move;
+			else
+				throw std::runtime_error("get_user_last_move: no account registered with this file descriptor");
+		}
+
 		const std::string&	get_srvname(void) const
 		{
 			return (_srvname);

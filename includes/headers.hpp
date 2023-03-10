@@ -23,13 +23,15 @@
 #include <iostream>
 #include <map>
 #include <set>
+#include <ctime>
 
 #ifndef DEBUG
 #define DEBUG 0
 #endif
 
 #define	TIMEOUT 5000
-#define DISCONENCT_TIME 60
+#define PING_TIME 30
+#define DISCONNECT_TIME 60
 
 // REPLIES
 #define RPL_WELCOME 1

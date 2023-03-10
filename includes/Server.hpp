@@ -11,12 +11,11 @@ class Server
 	private:
 		std::vector<struct pollfd>			_pfds;
 		int 								_listener;
-		char								buff[256];
 		std::map<int, Client*>				_clients;
 		char								remoteIP[INET6_ADDRSTRLEN];
 		char 								host[NI_MAXHOST];
 		Data								*_data;
-		int									_last_ping;
+		std::map<int, Buffer>               _storage_map;
 	public:
 	
 	Server(int listener, Data* data);

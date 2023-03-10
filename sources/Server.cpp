@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-Server::Server(int listener, Data *data) : _listener(listener), _data(data), _last_ping(static_cast<int>(std::time(NULL)))
+Server::Server(int listener, Data *data) : _listener(listener), _data(data)
 {
 	_pfds.push_back(pollfd());
 	_pfds.back().fd = listener;
@@ -72,8 +72,6 @@ int	Server::accept_connection(size_t location)
 		int err;
 		if ((err = getnameinfo((struct sockaddr*)&c_addr, sizeof(c_addr), host, NI_MAXHOST, NULL, 0, 0)) != 0)
 			perror("getnameinfo: ");
-		else
-			std::cout << "Hostname: " << host << std::endl;		
 		if ((fcntl(new_fd, F_SETFL, O_NONBLOCK)) < 0)
 		{
 			perror("fcntl: ");
@@ -85,71 +83,36 @@ int	Server::accept_connection(size_t location)
 	}
 }
 
-int	Server::receive_send_data(pfd_iter iter)
-{
-	if (DEBUG)
-		std::cout << "I am in the client" << std::endl;
-	int	numbytes;
-	int	sender_fd = receive_data(iter, &numbytes);
-	if (numbytes > 0 && sender_fd != -1)
-	{
-		send_data(numbytes, sender_fd);
-		return (0);
-	}
-	return (-1);
-}
-
-void	Server::send_data(int numbytes, int sender_fd)
-{
-	for (size_t j = 0; j < _pfds.size(); j++)
-	{
-		int dest_fd = _pfds[j].fd;
-		if (dest_fd != _listener && dest_fd != sender_fd)
-		{
-			if (send(dest_fd, buff, numbytes, 0) == -1)
-				perror("send:");
-		}
-	}
-}
-
-int		Server::receive_data(pfd_iter iter, int *numbytes)
-{
-	*numbytes = recv(iter->fd, buff, sizeof(buff), 0);
-	if (*numbytes < 0)
-	{
-		perror("recv:");
-		close(iter->fd);
-		del_from_pfds(iter);
-		return (-1);
-	}
-	return (iter->fd);
-}
-
-void	Server::handle_timeout(std::map<int, Buffer> &bufmap)
+void	Server::handle_timeout(std::map<int, Buffer> &_storage_map)
 {
 	std::vector<struct pollfd>::iterator _iter = _pfds.begin() + 1;
 	while (_iter != _pfds.end())
 	{
-		int _time = std::time(NULL) - _last_ping;
-		if (_time > DISCONENCT_TIME)
+		double time_diff = difftime(std::time(NULL), _data->get_user_last_move(_iter->fd));
+		if (time_diff > PING_TIME && time_diff < DISCONNECT_TIME)
+		{
+			// Ping
+		}
+		else if (time_diff > DISCONNECT_TIME)
 		{
 			std::cout << "Will disconnect client from socket " << _iter->fd << " for innactivity" << std::endl;
 			std::string	err_message = "You are being disconnected for innactivity, bye boo xoxo\n";
 			send(_iter->fd, err_message.c_str(), err_message.size(), 0);
 			_data->delete_user(_iter->fd);
 			close(_iter->fd);
-			bufmap.erase(_iter->fd);
+			_storage_map.erase(_iter->fd);
 			_iter = _pfds.erase(_iter);
 		}
 		else
-			_iter++;
+			++_iter;
 	}
 }
+
+// void	Server::disconnect_user()
 
 void	Server::run()
 {
 	char					buff[BUFSIZE];
-	std::map<int, Buffer>	bufmap;
 
 	if (DEBUG)
 	{
@@ -176,15 +139,28 @@ void	Server::run()
 		{
 			int fd = accept_connection(0);
 			_data->add_user(fd, host, remoteIP);
-			bufmap.insert(std::make_pair(fd, Buffer()));
-			_last_ping = static_cast<int>(std::time(NULL));
-			std::cout << "last_ping" << _last_ping << std::endl;
+			_storage_map.insert(std::make_pair(fd, Buffer()));
 		}
 		std::vector<struct pollfd>::iterator _iter = _pfds.begin() + 1;
 		while (_iter != _pfds.end())
 		{
 			if (_iter->revents == 0)
 			{
+				double time_diff = difftime(std::time(NULL), _data->get_user_last_move(_iter->fd));
+				if (time_diff > PING_TIME && time_diff < DISCONNECT_TIME)
+				{
+					// Ping
+				}
+				else if (time_diff > DISCONNECT_TIME)
+				{
+					std::cout << "Will disconnect client from socket " << _iter->fd << " for innactivity" << std::endl;
+					std::string	err_message = "You are being disconnected for innactivity, bye boo xoxo\n";
+					send(_iter->fd, err_message.c_str(), err_message.size(), 0);
+					_data->delete_user(_iter->fd);
+					close(_iter->fd);
+					_storage_map.erase(_iter->fd);
+					_iter = _pfds.erase(_iter);
+				}
 				++_iter;
 				continue;
 			}
@@ -196,7 +172,7 @@ void	Server::run()
 					std::cerr << _iter->fd << " blocking error" << std::endl;
 					_data->delete_user(_iter->fd);
 					close(_iter->fd);
-					bufmap.erase(_iter->fd);
+					_storage_map.erase(_iter->fd);
 					_iter = _pfds.erase(_iter);
 				}
 				else if (count < 0)
@@ -209,19 +185,19 @@ void	Server::run()
 					std::cerr << "Client from socket: " << _iter->fd << ": hung up" << std::endl;
 					_data->delete_user(_iter->fd);
 					close(_iter->fd);
-					bufmap.erase(_iter->fd);
+					_storage_map.erase(_iter->fd);
 					_iter = _pfds.erase(_iter);
 				}
 				else
 				{
-					_last_ping = static_cast<int>(std::time(NULL));
-					Buffer&	storage = (bufmap.find(_iter->fd))->second;
+					_data->set_user_last_move(_iter->fd);
+					Buffer&	storage = (_storage_map.find(_iter->fd))->second;
 					if (storage.size() + count > BUFSIZE)
 					{
 						std::cerr << _iter->fd << " overflown its buffer" << std::endl;
 						_data->delete_user(_iter->fd);
 						close(_iter->fd);
-						bufmap.erase(_iter->fd);
+						_storage_map.erase(_iter->fd);
 						_iter = _pfds.erase(_iter);
 					}
 					else
@@ -247,7 +223,7 @@ void	Server::run()
 						{
 							std::cerr << "Client from socket: " << _iter->fd << " hung up" << std::endl;
 							close(_iter->fd);
-							bufmap.erase(_iter->fd);
+							_storage_map.erase(_iter->fd);
 							_iter = _pfds.erase(_iter);
 						}
 						else
@@ -256,6 +232,6 @@ void	Server::run()
 				}
 			}
 		}
-		handle_timeout(bufmap);
+		// handle_timeout(_storage_map);
 	}
 }
