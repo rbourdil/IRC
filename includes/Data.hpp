@@ -268,6 +268,38 @@ class	Data {
 				it->second._mode &= (~flags);
 		}
 
+		void	set_members_limit(const std::string& channel, unsigned int limit)
+		{
+			channel_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				it->second._members_limit = limit;
+		}
+
+		void	set_ban_mask(const std::string& channel, const std::string& banmask)
+		{
+			channel_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				it->second._ban_mask = banmask;
+		}
+
+		void	set_except_mask(const std::string& channel, const std::string& exceptmask)
+		{
+			channel_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				it->second._except_mask = exceptmask;
+		}
+
+		void	set_invite_mask(const std::string& channel, const std::string& invitmask)
+		{
+			channel_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				it->second._invit_mask = invitmask;
+		}
+
 		void	set_member_status(const std::string& channel, int fd, int status)
 		{
 			channel_iterator	it = _channels.find(channel);
@@ -392,6 +424,22 @@ class	Data {
 		bool	is_in_channel(int fd, const std::string& channel) const
 		{
 			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+			{
+				const std::map<int, int>&	members_cpy = it->second._members;
+				if (members_cpy.find(fd) != members_cpy.end())
+					return (true);
+				else
+					return (false);
+			}
+			return (false);
+		}
+
+		bool	is_in_channel(const std::string& nick, const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+			int						fd = get_user_fd(nick);
 
 			if (it != _channels.end())
 			{

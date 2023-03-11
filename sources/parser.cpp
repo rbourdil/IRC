@@ -145,6 +145,26 @@ int	valid_channel_mode(const std::string& mode)
 	return (0);
 }
 
+bool	match_mode_params(const std::vector<std::string>& params)
+{
+	std::vector<std::string>::const_iterator	itv = params.begin() + 1;
+	std::string::const_iterator					its = params[0].begin();
+
+	if (*its == '+' || *its == '-')
+		++its;
+	for (; its != params[0].end(); ++its)
+	{
+		if (*its == 'o' || *its == 'v' || *its == 'k' || *its == 'b' || *its == 'e' || *its == 'i')
+		{
+			if (itv == params.end())
+				return (false);
+			else
+				++itv;
+		}
+	}
+	return (true);
+}
+
 bool	valid_channel(const std::string& channel)
 {
 	std::string::const_iterator	it = channel.begin();

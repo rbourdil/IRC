@@ -309,9 +309,10 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 	{
 		_args.push_back(channel);
 		_args.push_back(channel_mode_str(channel));
+		std::cerr << channel_mode_str(channel) << std::endl;
 		rpl_channel_modeis(fd, _args);	
 	}
-	else if ((char_mode = valid_channel_mode(params[1])) != 0) // might remove
+	else if ((char_mode = valid_channel_mode(params[1])) != 0)
 	{
 		std::string	str_mode;
 		str_mode.push_back(char_mode);
@@ -319,7 +320,11 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 		_args.push_back(channel);
 		err_unknown_mode(fd, _args);
 	}
-	/*
+	else if (!match_mode_params(params)) // check if there are enough params supplied to the flags
+	{
+		_args.push_back("MODE");
+		err_need_moreparams(fd, _args);
+	}
 	else // channel is regonized and there are flags
 	{
 		std::vector<std::string>::const_iterator	itv = params.begin() + 1;
@@ -333,10 +338,169 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 				add = false;
 			itf++;
 		}
-		for (; itf != 		
-	*/
+		for (; itf != flags.end(); itf++)
+		{
+			switch (*itf) 
+			{
+				case 'o':
+					if (_data->is_in_channel(*itv, channel))
+					{
+						if (add)
+							_data->set_member_status(channel, _data->get_user_fd(*itv), OPER_MFLAG);
+						else
+							_data->unset_member_status(channel, _data->get_user_fd(*itv), OPER_MFLAG);
+						++itv;
+					}
+					else
+					{
+						_args.push_back(*itv++);
+						_args.push_back(channel);
+						err_usernot_inchannel(fd, _args);
+						_args.pop_back();
+						_args.pop_back();
+					}
+					break;
+				case 'v':
+					if (_data->is_in_channel(*itv, channel))
+					{
+						if (add)
+							_data->set_member_status(channel, _data->get_user_fd(*itv), VOICE_MFLAG);
+						else
+							_data->unset_member_status(channel, _data->get_user_fd(*itv), VOICE_MFLAG);
+						++itv;
+					}
+					else
+					{
+						_args.push_back(*itv++);
+						_args.push_back(channel);
+						err_usernot_inchannel(fd, _args);
+						_args.pop_back();
+						_args.pop_back();
+					}
+					break;
+				case 'a':
+					if (add)
+						_data->set_channel_flags(channel, ANON_CFLAG);
+					else
+						_data->unset_channel_flags(channel, ANON_CFLAG);
+					break;
+				case 'i':
+					if (add)
+						_data->set_channel_flags(channel, INVITE_ONLY_CFLAG);
+					else
+						_data->unset_channel_flags(channel, INVITE_ONLY_CFLAG);
+					break;
+				case 'm':
+					if (add)
+						_data->set_channel_flags(channel, MODERATED_CFLAG);
+					else
+						_data->unset_channel_flags(channel, MODERATED_CFLAG);
+					break;
+				case 'n':
+					if (add)
+						_data->set_channel_flags(channel, NO_MESSAGES_CFLAG);
+					else
+						_data->unset_channel_flags(channel, NO_MESSAGES_CFLAG);
+					break;
+				case 'q':
+					if (add)
+						_data->set_channel_flags(channel, QUIET_CFLAG);
+					else
+						_data->unset_channel_flags(channel, QUIET_CFLAG);
+					break;
+				case 'p':
+					if (add)
+						_data->set_channel_flags(channel, PRIVATE_CFLAG);
+					else
+						_data->unset_channel_flags(channel, PRIVATE_CFLAG);
+					break;
+				case 's':
+					if (add)
+						_data->set_channel_flags(channel, SECRET_CFLAG);
+					else
+						_data->unset_channel_flags(channel, SECRET_CFLAG);
+					break;
+				case 'r':
+					if (add)
+						_data->set_channel_flags(channel, SRV_REOP_CFLAG);
+					else
+						_data->unset_channel_flags(channel, SRV_REOP_CFLAG);
+					break;
+				case 't':
+					if (add)
+						_data->set_channel_flags(channel, TOPIC_OPER_CFLAG);
+					else
+						_data->unset_channel_flags(channel, TOPIC_OPER_CFLAG);
+					break;
+				case 'k':
+					if (add)
+					{
+						std::string	key = *itv++;
+						if (_data->check_channel_flags(channel, KEY_CFLAG))
+						{
+							_args.push_back(channel);
+							err_keyset(fd, _args);
+						}
+						else if (!valid_key(key))
+						{
+							_args.push_back(key);
+							err_badchannel_key(fd, _args);
+						}
+						else
+						{
+							_data->set_channel_flags(channel, KEY_CFLAG);
+							_data->set_channel_key(channel, key);
+						}
+					}
+					else
+						_data->unset_channel_flags(channel, KEY_CFLAG);
+					break;
+				case 'l':
+					if (add)
+					{
+						std::stringstream	ss(*itv++);
+						unsigned int		limit;
+						ss >> limit;
 
-	// the idea is to call another function that takes a char and a reference to the params iterator to eventually use a mask
+						if (ss)
+						{
+							_data->set_channel_flags(channel, USER_LIMIT_CFLAG);
+							_data->set_members_limit(channel, limit);
+						}
+					}
+					else
+						_data->unset_channel_flags(channel, USER_LIMIT_CFLAG);
+					break;
+				case 'b':
+					if (add)
+					{
+						_data->set_channel_flags(channel, BAN_MASK_CFLAG);
+						_data->set_ban_mask(channel, *itv++);
+					}
+					else
+						_data->unset_channel_flags(channel, BAN_MASK_CFLAG);
+					break;
+				case 'e':
+					if (add)
+					{
+						_data->set_channel_flags(channel, EXCEPT_MASK_CFLAG);
+						_data->set_except_mask(channel, *itv++);
+					}
+					else
+						_data->unset_channel_flags(channel, EXCEPT_MASK_CFLAG);
+					break;
+				case 'I':
+					if (add)
+					{
+						_data->set_channel_flags(channel, INVIT_MASK_CFLAG);
+						_data->set_except_mask(channel, *itv++);
+					}
+					else
+						_data->unset_channel_flags(channel, INVIT_MASK_CFLAG);
+					break;
+			}
+		}
+	}
 }
 		
 
