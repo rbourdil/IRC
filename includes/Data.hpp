@@ -233,7 +233,11 @@ class	Data {
 			channel_iterator	it = _channels.find(channel);
 
 			if (it != _channels.end())
+			{
 				it->second._members.erase(fd);
+				if (it->second._members.size() == 0)
+					_channels.erase(it);
+			}
 		}
 
 		void	set_channel_topic(const std::string& channel, const std::string& topic)

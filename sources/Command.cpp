@@ -176,6 +176,7 @@ void	Command::join(int fd, std::string channel, std::string key)
 		}
 		_data->add_channel(channel, TOPIC_OPER_CFLAG);
 		_data->add_user_to_channel(fd, channel);
+		_data->add_channel_to_user(fd, channel);
 		if (channel[0] != '+')
 			_data->set_member_status(channel, fd, OPER_MFLAG);
 		if (channel[0] == '!')
@@ -215,6 +216,7 @@ void	Command::join(int fd, std::string channel, std::string key)
 	else // user joins an existing channel
 	{
 		_data->add_user_to_channel(fd, channel);
+		_data->add_channel_to_user(fd, channel);
 		std::vector<int>			members_fd = _data->get_members_list_fd(channel);	
 		std::vector<int>::iterator	it = members_fd.begin();
 		_args.push_back(_data->get_user_info(fd));
@@ -279,8 +281,6 @@ void	Command::part(int fd, const std::string& channel, const std::string& messag
 			part_reply(*it, _args);
 		_data->remove_channel_from_user(fd, channel);
 		_data->remove_user_from_channel(fd, channel);
-		if (_data->channel_is_empty(channel))
-			_data->delete_channel(channel);
 	}
 }
 
@@ -309,7 +309,6 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 	{
 		_args.push_back(channel);
 		_args.push_back(channel_mode_str(channel));
-		std::cerr << channel_mode_str(channel) << std::endl;
 		rpl_channel_modeis(fd, _args);	
 	}
 	else if ((char_mode = valid_channel_mode(params[1])) != 0)
@@ -327,7 +326,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 	}
 	else // channel is regonized and there are flags
 	{
-		std::vector<std::string>::const_iterator	itv = params.begin() + 1;
+		std::vector<std::string>::const_iterator	itv = params.begin() + 2;
 		std::string					flags = params[1];
 		std::string::const_iterator	itf = flags.begin();
 		bool						add = true;

@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/03 16:59:07 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/11 12:38:11 by rbourdil         ###   ########.fr       */
+/*   Updated: 2023/03/11 17:29:43 by rbourdil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -504,7 +504,7 @@ void	err_users_dontmatch(int dest_fd, const std::vector<std::string> args)
 // 473
 void	err_invite_onlychan(int dest_fd, const std::vector<std::string> args)
 {
-	std::string	prefix = ":" + args[0] + " 473";
+	std::string	prefix = ":" + args[0] + " 473 ";
 	std::string err_message = prefix + args[1] + " :Cannot join channel (+i)\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }

@@ -25,10 +25,7 @@ void	parser::get_params(void)
 		}
 		update_params();
 		match(WORD_TOKEN);
-	}
-	if (nb_of_params() == 14 && _current == ' ')
-	{
-		match(' ');
+	} if (nb_of_params() == 14 && _current == ' ') { match(' ');
 		if (_current == ':')
 			match(':');
 		get_trailing(); }
@@ -148,14 +145,14 @@ int	valid_channel_mode(const std::string& mode)
 
 bool	match_mode_params(const std::vector<std::string>& params)
 {
-	std::vector<std::string>::const_iterator	itv = params.begin() + 1;
-	std::string::const_iterator					its = params[0].begin();
+	std::vector<std::string>::const_iterator	itv = params.begin() + 2;
+	std::string::const_iterator					its = params[1].begin();
 
 	if (*its == '+' || *its == '-')
 		++its;
-	for (; its != params[0].end(); ++its)
+	for (; its != params[1].end(); ++its)
 	{
-		if (*its == 'o' || *its == 'v' || *its == 'k' || *its == 'b' || *its == 'e' || *its == 'i')
+		if (*its == 'o' || *its == 'v' || *its == 'k' || *its == 'b' || *its == 'e' || *its == 'I')
 		{
 			if (itv == params.end())
 				return (false);
