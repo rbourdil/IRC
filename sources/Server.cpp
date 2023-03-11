@@ -141,6 +141,7 @@ void	Server::run()
 		std::vector<struct pollfd>::iterator _iter = _pfds.begin() + 1;
 		while (_iter != _pfds.end())
 		{
+			// need to check for errors also ?
 			if (_iter->revents == 0)
 			{
 				// double time_diff = difftime(std::time(NULL), _data->get_user_last_move(_iter->fd));
@@ -199,23 +200,28 @@ void	Server::run()
 					}
 					else
 					{
-						ssize_t	i = 0;
-						while (buff[i++] != '\n' && i < count)
-							;
-						storage.append(buff, i);
-						parser	p(storage);
-						p.parse();
-						if (p.state() == VALID_CMD)
-						{
-							Command	exec(_data);
-							irc_cmd	cmd;
+						ssize_t	i,j;
 
-							cmd = p.out();
-							exec.execute_cmd(_iter->fd, cmd);
+						i = j = 0;
+						while (i < count)
+						{
+							while (buff[j++] != '\n' && j < count)
+								;
+							storage.append(buff + i, j);
+							parser	p(storage);
+							p.parse();
+							if (p.state() == VALID_CMD)
+							{
+								Command	exec(_data);
+								irc_cmd	cmd;
+
+								cmd = p.out();
+								exec.execute_cmd(_iter->fd, cmd);
+							}
+							if (p.state() == VALID_CMD || p.state() == DUMP_CMD)
+								storage.reset();
+							i = j;
 						}
-						if (p.state() == VALID_CMD || p.state() == DUMP_CMD)
-							storage.reset();
-						storage.append(buff + i, count - i);
 						if (!_data->is_connected(_iter->fd))
 						{
 							std::cerr << "Client from socket: " << _iter->fd << " hung up" << std::endl;

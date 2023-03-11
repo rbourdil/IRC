@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/03 16:59:07 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/09 19:06:24 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/11 12:38:11 by rbourdil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -756,7 +756,7 @@ void	rpl_except_list(int dest_fd, const std::vector<std::string> args)
 void	rpl_channel_modeis(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 324 ";
-	std::string err_message = prefix + args[1] + " " + args[2] + " " + args[3] +"\n";
+	std::string err_message = prefix + args[1] + " " + args[2] +"\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);		
 }
 
