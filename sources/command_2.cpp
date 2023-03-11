@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/11 12:47:50 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/11 16:49:52 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -162,4 +162,34 @@ void	Command::names(int fd, const std::vector<std::string>& params)
 	}
 	else
 		err_not_registered(fd, _args);
+}
+
+void	Command::ping(int fd, const std::vector<std::string>& params)
+{
+	(void)params;
+	std::string ping_message = "PING :";
+	ping_message.insert(1, _data->get_srvname());
+	send(fd, ping_message.c_str(), ping_message.size(), 0);
+}
+
+void	Command::pong(int fd, const std::vector<std::string>& params)
+{
+	std::string server_name = _data->get_srvname();
+	_data->set_user_last_pong(fd);
+	_data->set_user_was_ping(fd, false);
+	_args.push_back(server_name);
+	int	size_p = params.size();
+	if (size_p == 0)
+	{
+		err_noorigin(fd, _args);
+		return;
+	}
+	if (size_p == 1)
+	{
+		if(params[0] != server_name)
+		{
+			_args.push_back(server_name);
+			err_nosuch_server(fd, _args);
+		}		
+	}
 }

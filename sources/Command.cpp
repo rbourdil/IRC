@@ -658,6 +658,8 @@ Command::Command(Data* data) : _data(data)
 	_cmd_map.insert(std::make_pair("USER", &Command::user));
 	_cmd_map.insert(std::make_pair("TOPIC", &Command::topic));
 	_cmd_map.insert(std::make_pair("NAMES", &Command::names));
+	_cmd_map.insert(std::make_pair("PING", &Command::ping));
+	_cmd_map.insert(std::make_pair("PONG", &Command::pong));
 	_cmd_map.insert(std::make_pair("MODE", &Command::mode_dispatch));
 	_cmd_map.insert(std::make_pair("QUIT", &Command::quit_dispatch));
 	_cmd_map.insert(std::make_pair("JOIN", &Command::join_dispatch));

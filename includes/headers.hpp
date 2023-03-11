@@ -31,7 +31,8 @@
 
 #define	TIMEOUT 5000
 #define PING_TIME 30
-#define DISCONNECT_TIME 60
+#define PONG_TIME 50
+#define DISCONNECT_TIME 80
 
 // REPLIES
 #define RPL_WELCOME 1

@@ -89,11 +89,15 @@ void	Server::handle_timeout(void)
 	while (_iter != _pfds.end())
 	{
 		double time_diff = difftime(std::time(NULL), _data->get_user_last_move(_iter->fd));
-		if (time_diff > PING_TIME && time_diff < DISCONNECT_TIME)
+		double pong_diff = difftime(std::time(NULL), _data->get_user_last_pong(_iter->fd));
+
+		if ((!_data->get_user_was_ping(_iter->fd)) && time_diff > PING_TIME && time_diff < DISCONNECT_TIME)
 		{
-			std::string ping_message = "PING :server_name";
+			ping(_iter->fd);
+			_data->set_user_last_pong(_iter->fd);
+			++_iter;
 		}
-		else if (time_diff > DISCONNECT_TIME)
+		else if (_data->get_user_was_ping(_iter->fd) && pong_diff > PONG_TIME)
 		{
 			std::cout << "Will disconnect client from socket " << _iter->fd << " for innactivity" << std::endl;
 			std::string	err_message = "You are being disconnected for innactivity, bye boo xoxo\n";
@@ -103,12 +107,33 @@ void	Server::handle_timeout(void)
 			_storage_map.erase(_iter->fd);
 			_iter = _pfds.erase(_iter);
 		}
+		// else if (time_diff > DISCONNECT_TIME)
+		// {
+		// 	std::cout << "Will disconnect client from socket " << _iter->fd << " for innactivity" << std::endl;
+		// 	std::string	err_message = "You are being disconnected for innactivity, bye boo xoxo\n";
+		// 	send(_iter->fd, err_message.c_str(), err_message.size(), 0);
+		// 	_data->delete_user(_iter->fd);
+		// 	close(_iter->fd);
+		// 	_storage_map.erase(_iter->fd);
+		// 	_iter = _pfds.erase(_iter);
+		// }
 		else
 			++_iter;
 	}
 }
 
 // void	Server::disconnect_user()
+
+void	Server::ping(int fd)
+{
+	_data->set_user_was_ping(fd, true);
+	std::string ping_message = "PING :" + _data->get_srvname() + "\n";
+
+	// ping_message.insert(1, _data->get_srvname());
+	send(fd, ping_message.c_str(), ping_message.size(), 0);
+}
+
+
 
 void	Server::run()
 {
@@ -130,8 +155,8 @@ void	Server::run()
 			perror("poll:");
 			exit(1);
 		}
-		// else if (poll_count == 0)
-		// 	handle_timeout();
+		else if (poll_count == 0)
+			handle_timeout();
 		if (_pfds[0].revents & POLLIN)
 		{
 			int fd = accept_connection(0);

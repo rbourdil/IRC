@@ -57,8 +57,10 @@ struct	Client {
 	int							_mode;
 	
 	time_t						_last_move;
+	time_t						_last_pong;
+	bool						_was_ping;
 
-	Client(const std::string& hostname, const std::string& hostaddress) : _state(UNREGISTERED_STATE), _hostname(hostname), _hostaddress(hostaddress), _mode(0), _last_move(std::time(NULL)) { }
+	Client(const std::string& hostname, const std::string& hostaddress) : _state(UNREGISTERED_STATE), _hostname(hostname), _hostaddress(hostaddress), _mode(0), _last_move(std::time(NULL)), _was_ping(false) { }
 
 };
 
@@ -103,7 +105,7 @@ class	Data {
 	public:
 
 		// constructor
-		explicit Data(const std::string& srvname, const char* passwd) : _srvname(srvname), _passwd(passwd) { }
+		explicit Data(const std::string& srvname, const char* passwd) : _srvname(srvname), _passwd(passwd){ }
 
 		// modifiers
 
@@ -162,11 +164,30 @@ class	Data {
 				it->second._realname = realname;
 		}
 
+		void	set_user_was_ping(int fd, bool was_pong)
+		{
+			client_iterator it = _clients.find(fd);
+			if (it != _clients.end())
+			{
+				if (was_pong)
+					it->second._was_ping = true;
+				else
+					it->second._was_ping = false;
+			}
+		}
+
 		void	set_user_last_move(int fd)
 		{
 			client_iterator it = _clients.find(fd);
 			if (it != _clients.end())
 				it->second._last_move = std::time(NULL);
+		}
+
+		void	set_user_last_pong(int fd)
+		{
+			client_iterator it = _clients.find(fd);
+			if (it != _clients.end())
+				it->second._last_pong = std::time(NULL);
 		}
 
 		void	set_user_state(int fd, int state)
@@ -324,8 +345,15 @@ class	Data {
 			}
 		}
 
-
 		// lookup
+		bool				get_user_was_ping(int fd)
+		{
+			client_const_iterator	it = _clients.find(fd);
+			if (it != _clients.end())
+				return it->second._was_ping;
+			else
+				throw std::runtime_error("get_user_was_ping: no account registered with this file descriptor");
+		}
 		
 		time_t				get_user_last_move(int fd) const
 		{
@@ -334,6 +362,15 @@ class	Data {
 				return it->second._last_move;
 			else
 				throw std::runtime_error("get_user_last_move: no account registered with this file descriptor");
+		}
+
+		time_t				get_user_last_pong(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+			if (it != _clients.end())
+				return it->second._last_pong;
+			else
+				throw std::runtime_error("get_user_last_pong: no account registered with this file descriptor");
 		}
 
 		const std::string&	get_srvname(void) const
