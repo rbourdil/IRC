@@ -50,12 +50,13 @@ void	parser::get_trailing(void)
 
 void	parser::get_crlf(void)
 {
+	match('\r');
 	match('\n');
 }
 	
 void	parser::parse(void)
 {
-	if (_current == '\n')
+	if (_current == '\r')
 	{
 		get_crlf();
 		_state = DUMP_CMD;
@@ -63,7 +64,7 @@ void	parser::parse(void)
 	}
 	if (_current == ':')
 		get_prefix();
-	else if (_current != '\n')
+	else
 		get_cmd();
 	get_crlf();
 	if (!_panic)

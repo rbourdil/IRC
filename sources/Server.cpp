@@ -200,13 +200,26 @@ void	Server::run()
 					}
 					else
 					{
+						std::cerr << "[ MSG ] " << std::string(buff, buff + count) << std::endl;
 						ssize_t	i,j;
 
 						i = j = 0;
 						while (i < count)
 						{
-							while (buff[j++] != '\n' && j < count)
-								;
+							while (j < count)
+							{
+								if (buff[j] == '\r')
+								{
+									j++;
+									if (buff[j] == '\n')
+									{
+										j++;
+										break;
+									}
+								}
+								else 
+									j++;
+							}
 							storage.append(buff + i, j);
 							parser	p(storage);
 							p.parse();
