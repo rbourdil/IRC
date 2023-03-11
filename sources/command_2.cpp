@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/11 16:49:52 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/11 23:38:41 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,14 +164,6 @@ void	Command::names(int fd, const std::vector<std::string>& params)
 		err_not_registered(fd, _args);
 }
 
-void	Command::ping(int fd, const std::vector<std::string>& params)
-{
-	(void)params;
-	std::string ping_message = "PING :";
-	ping_message.insert(1, _data->get_srvname());
-	send(fd, ping_message.c_str(), ping_message.size(), 0);
-}
-
 void	Command::pong(int fd, const std::vector<std::string>& params)
 {
 	std::string server_name = _data->get_srvname();
@@ -192,4 +184,104 @@ void	Command::pong(int fd, const std::vector<std::string>& params)
 			err_nosuch_server(fd, _args);
 		}		
 	}
+}
+
+void	Command::privmsg(int fd, const std::vector<std::string>& params)
+{
+	_args.push_back(_data->get_srvname());
+	int p_size = params.size();
+	if (p_size == 0)
+	{
+		_args.push_back("PRIVMSG");
+		err_notext_tosend(fd, _args);
+		err_norecipient(fd, _args);
+	}
+	else if (p_size == 1)
+		err_notext_tosend(fd, _args);
+	else
+	{
+		// std::vector<std::string> target = parse_list(params[0]);
+		// std::string message = params[1];
+		// std::vector<std::string>::iterator target_iter = target.begin();
+		//if domain
+			//not allowed
+		//if it is channel
+			//check all are channel
+				//if all are channel
+					//for each channel
+						//if channel exists
+							//if +m
+								//if client has permission
+									//for each user in channel
+										//if user is away
+											//rpl_away
+										//else
+											//send
+								//else
+									//err_cannotsendtochan
+							//if +n
+								//if the user has joined the channel
+									//for each user in channel
+										//if user is away
+											//rpl_away
+										//else
+											//send
+								//else
+									//err_cannotsendtochan
+							//if size > 5
+								//err_toomanytargets
+						//else
+							//err_nosuchchannel
+				//else
+					//err_nosuchchan
+		//else if it is a nickname
+			//check all are nickname
+				//if all are nickname
+					//for each user
+						//if nickname exists
+							//if user away
+								//rpl_way -> continue
+							//if user on the same channel
+								//send
+							//else
+								//error you are not on channel
+						//else
+							//err_nosuchnick
+				//else
+					//error
+		//else if it is user
+			//for each user
+				//if user is unique
+					//send
+				//else
+					//err_toomanytarget
+	}
+}
+
+/*---------------------------HELPER FUNCTIONS---------------------------------*/
+
+bool isTopLevelDomain(std::string target) {
+    // Check that the target string is not empty
+    if (target.empty()) {
+        return false;
+    }
+
+    // Check that the target string ends with a dot and a TLD
+    size_t pos = target.find_last_of(".");
+    if (pos == std::string::npos || pos == target.size() - 1) {
+        return false;
+    }
+    std::string tld = target.substr(pos + 1);
+
+    // Check that the TLD matches the pattern
+    if (tld.size() < 2 || tld.size() > 63) {
+        return false;
+    }
+    for (size_t i = 0; i < tld.size(); i++) {
+        if (!isalpha(tld[i])) {
+            return false;
+        }
+    }
+
+    return true;
 }

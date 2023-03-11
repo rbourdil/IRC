@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/03 16:59:07 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/11 17:29:43 by rbourdil         ###   ########.fr       */
+/*   Updated: 2023/03/11 20:05:11 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -402,44 +402,22 @@ void	err_unknown_command(int dest_fd, const std::vector<std::string> args)
 	std::string	prefix = ":" + args[0] + " 421 ";
 	std::string err_message = prefix + args[1] + " :Unknown command\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
-	// std::string	prefix = ":" + args[0] + " " + args[1] + args[2];
-	// std::string err_message = prefix + " " + args[3] + " :Unknown command\n";
-	// send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
 //461
 void	err_need_moreparams(int dest_fd, const std::vector<std::string> args)
 {
-	// if (args.size() > 3)
-	// {
-	// 	std::string	prefix = ":" + args[0] + " 461 ";
-	// 	std::string err_message = prefix + args[1] + " :Not enough parameters\n";
-	// 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
-	// }
-	// else
-	// {
-		std::string	prefix = ":" + args[0] + " 461 ";
-		std::string err_message = prefix + args[1] + " :Not enough parameters\n";
-		send(dest_fd, err_message.c_str(), err_message.size(), 0);
-	// }
+	std::string	prefix = ":" + args[0] + " 461 ";
+	std::string err_message = prefix + args[1] + " :Not enough parameters\n";
+	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
 //462
 void	err_already_registered(int dest_fd, const std::vector<std::string> args)
 {
-// 	if (args.size() > 2)
-// 	{
-// 		std::string	prefix = ":" + args[0] + " " + args[1] + " " + args[2];
-// 		std::string err_message = prefix + " :Unauthorized command (already registered)\n";
-// 		send(dest_fd, err_message.c_str(), err_message.size(), 0);	
-// 	}
-// 	else
-// 	{
-		std::string	prefix = ":" + args[0] + " 462 ";
-		std::string err_message = prefix + " :Unauthorized command (already registered)\n";
-		send(dest_fd, err_message.c_str(), err_message.size(), 0);	
-	// }
-	// ":Unauthorized command (alredy registered)"
+	std::string	prefix = ":" + args[0] + " 462 ";
+	std::string err_message = prefix + " :Unauthorized command (already registered)\n";
+	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 
 //451
@@ -456,7 +434,6 @@ void	err_no_nicknamegive(int dest_fd, const std::vector<std::string> args)
 		std::string	prefix = ":" + args[0] + " 431 ";
 		std::string err_message = prefix + ":No nickname given\n";
 		send(dest_fd, err_message.c_str(), err_message.size(), 0);		
-	// ":No nickname given"
 }
 
 // 432 HERE I NEED TO CHECK IF HE IS STORING THE ERRONEOUS NICKNAME

@@ -128,8 +128,6 @@ void	Server::ping(int fd)
 {
 	_data->set_user_was_ping(fd, true);
 	std::string ping_message = "PING :" + _data->get_srvname() + "\n";
-
-	// ping_message.insert(1, _data->get_srvname());
 	send(fd, ping_message.c_str(), ping_message.size(), 0);
 }
 
@@ -155,8 +153,8 @@ void	Server::run()
 			perror("poll:");
 			exit(1);
 		}
-		else if (poll_count == 0)
-			handle_timeout();
+		// else if (poll_count == 0)
+		// 	handle_timeout();
 		if (_pfds[0].revents & POLLIN)
 		{
 			int fd = accept_connection(0);

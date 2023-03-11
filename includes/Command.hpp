@@ -33,14 +33,15 @@ class	Command {
 		void	names(int fd, const std::vector<std::string>& params);
 		void	channel_mode(int fd, const std::vector<std::string>& params);
 		void	part(int fd, const std::string& channel, const std::string& message);
-		void	ping(int fd, const std::vector<std::string>& params);
 		void	pong(int fd, const std::vector<std::string>& params);
+		void	privmsg(int fd, const std::vector<std::string>& params);
 
 		// helper functions
 		void	quit_dispatch(int fd, const std::vector<std::string>& params);
 		void	join_dispatch(int fd, const std::vector<std::string>& params);
 		void	part_dispatch(int fd, const std::vector<std::string>& params);
 		void	mode_dispatch(int fd, const std::vector<std::string>& params);
+		bool 	isTopLevelDomain(std::string target);
 		
 		std::string	channel_mode_str(const std::string& channel);
 		std::string	user_mode_str(int fd);
