@@ -29,16 +29,16 @@ class	Command {
 
 		// channel commands
 		void	join(int fd, std::string channel, std::string key);
-		void	part(int fd, const std::string& channel, const std::string& message);
-		void	channel_mode(int fd, const std::vector<std::string>& params);
 		void	topic(int fd, const std::vector<std::string>& params);
+		void	names(int fd, const std::vector<std::string>& params);
+		void	channel_mode(int fd, const std::vector<std::string>& params);
+		void	part(int fd, const std::string& channel, const std::string& message);
 
 		// helper functions
 		void	quit_dispatch(int fd, const std::vector<std::string>& params);
 		void	join_dispatch(int fd, const std::vector<std::string>& params);
 		void	part_dispatch(int fd, const std::vector<std::string>& params);
 		void	mode_dispatch(int fd, const std::vector<std::string>& params);
-		void	names_dispatch(int fd, const std::vector<std::string>& params);
 		
 		std::string	channel_mode_str(const std::string& channel);
 		std::string	user_mode_str(int fd);
