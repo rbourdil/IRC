@@ -493,11 +493,11 @@ Command::Command(Data* data) : _data(data)
 	_cmd_map.insert(std::make_pair("NICK", &Command::nick));
 	_cmd_map.insert(std::make_pair("USER", &Command::user));
 	_cmd_map.insert(std::make_pair("TOPIC", &Command::topic));
+	_cmd_map.insert(std::make_pair("NAMES", &Command::names));
 	_cmd_map.insert(std::make_pair("MODE", &Command::mode_dispatch));
 	_cmd_map.insert(std::make_pair("QUIT", &Command::quit_dispatch));
 	_cmd_map.insert(std::make_pair("JOIN", &Command::join_dispatch));
 	_cmd_map.insert(std::make_pair("PART", &Command::part_dispatch));
-	_cmd_map.insert(std::make_pair("TOPIC", &Command::names_dispatch));
 }
 
 void	Command::execute_cmd(int fd, const irc_cmd& cmd)
