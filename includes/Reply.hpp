@@ -90,5 +90,8 @@ void	join_reply(int dest_fd, const std::vector<std::string>& args);
 void	part_reply(int dest_fd, const std::vector<std::string>& args);
 
 void	error_quit(int dest_fd, const std::vector<std::string>& args);
+void	error_user(int dest_fd, const std::vector<std::string>& args);
+void	error_host(int dest_fd, const std::vector<std::string>& args);
+void	error_host_notmatch(int dest_fd, const std::vector<std::string>& args);
 
 #endif

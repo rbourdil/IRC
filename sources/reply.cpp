@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/03 16:59:07 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/11 20:05:11 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/13 20:19:17 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -503,7 +503,7 @@ void	err_nosuch_channel(int dest_fd, const std::vector<std::string> args)
 void	err_toomany_targets(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 407 ";
-	std::string err_message = prefix + args[1] + " :407 recipients. " + args[3] + "\n";
+	std::string err_message = prefix + args[1] + " :407 recipients. " + args[2] + "\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 // 474
@@ -988,5 +988,27 @@ void	error_quit(int dest_fd, const std::vector<std::string>& args)
 		std::string	suffix = " (QUIT: " + args[2] + ")";
 		err_message += suffix;
 	}
+	send(dest_fd, err_message.c_str(), err_message.size(), 0);
+}
+
+
+void	error_user(int dest_fd, const std::vector<std::string>& args)
+{
+	std::string	prefix = ":" + args[0];
+	std::string	err_message = prefix + " " + args[1] + " ERROR: user does not exist\n";
+	send(dest_fd, err_message.c_str(), err_message.size(), 0);
+}
+
+void	error_host(int dest_fd, const std::vector<std::string>& args)
+{
+	std::string	prefix = ":" + args[0];
+	std::string	err_message = prefix + " " + args[1] + " ERROR: invalid hostname/hostaddress\n";
+	send(dest_fd, err_message.c_str(), err_message.size(), 0);
+}
+
+void	error_host_notmatch(int dest_fd, const std::vector<std::string>& args)
+{
+	std::string	prefix = ":" + args[0];
+	std::string	err_message = prefix + " " + args[1] + " ERROR: user does not have such hostname/hostaddress\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
