@@ -42,6 +42,7 @@ class	Command {
 		void	part(int fd, const std::string& channel, const std::string& message);
 		void	pong(int fd, const std::vector<std::string>& params);
 		void	privmsg(int fd, const std::vector<std::string>& params);
+		void	list(int fd, const std::vector<std::string>& params);
 
 		// helper functions
 		void	quit_dispatch(int fd, const std::vector<std::string>& params);
