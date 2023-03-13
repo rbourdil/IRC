@@ -31,6 +31,7 @@ class Server
 	int		accept_connection(size_t location);
 	int		receive_send_data(pfd_iter iter);
 	int		receive_data(pfd_iter iter, int *numbytes);
+	void	ping(int fd);
 
 
 };
