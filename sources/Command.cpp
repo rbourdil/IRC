@@ -133,6 +133,7 @@ void	Command::user_mode(int fd, const std::vector<std::string>& params)
 		else
 			_data->unset_user_flags(fd, flags);
 		_args.push_back(user_mode_str(fd));
+		std::cerr << _args.size() << std::endl;
 		rpl_umodeis(fd, _args);
 	}
 }
@@ -660,12 +661,39 @@ void	Command::mode_dispatch(int fd, const std::vector<std::string>& params)
 		err_need_moreparams(fd, _args);
 	}
 	else if (_data->nickname_exists(params[0]))
-	{
-		_args.push_back(_data->get_srvname());
 		user_mode(fd, params);
-	}
 	else
 		channel_mode(fd, params);
+}
+
+void	Command::list(int fd, const std::vector<std::string>& params)
+{
+	_args.push_back(_data->get_srvname());
+	std::vector<std::string>	channels;
+	if (!_data->is_registered(fd))
+	{
+		err_not_registered(fd, _args);
+	}
+	else if (params.size() < 1)
+		channels = _data->list_visible_channels(fd);
+	else
+		channels = parse_list(params[1]);
+	std::vector<std::string>::const_iterator	it = channels.begin();
+	for (; it != channels.end(); it++)
+	{
+		if (_data->channel_is_visible(*it))
+		{
+			_args.push_back(*it);
+			int	count = _data->channel_visible_members_count(*it);	
+			std::stringstream	ss;
+			ss << count;
+			_args.push_back(ss.str());
+			_args.push_back(_data->get_channel_topic(*it));
+			rpl_list(fd, _args);
+			_args.erase(_args.begin() + 1, _args.end());
+		}
+	}
+	rpl_listend(fd, _args);
 }
 
 
@@ -711,6 +739,7 @@ Command::Command(Data* data) : _data(data)
 	_cmd_map.insert(std::make_pair("QUIT", &Command::quit_dispatch));
 	_cmd_map.insert(std::make_pair("JOIN", &Command::join_dispatch));
 	_cmd_map.insert(std::make_pair("PART", &Command::part_dispatch));
+	_cmd_map.insert(std::make_pair("LIST", &Command::list));
 }
 
 void	Command::execute_cmd(int fd, const irc_cmd& cmd)

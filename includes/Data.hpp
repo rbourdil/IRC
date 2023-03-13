@@ -659,6 +659,25 @@ class	Data {
 				throw std::runtime_error("channel_members_count: channel name does not exist");
 		}
 
+		int	channel_visible_members_count(const std::string& channel) const
+		{
+			channel_const_iterator	itc = _channels.find(channel);
+			int						count = 0;
+
+			if (itc != _channels.end())
+			{
+				std::map<int, int>::const_iterator	itm = itc->second._members.begin();
+				for (; itm != itc->second._members.end(); itm++)
+				{
+					if (!check_user_flags(itm->first, INVISIBLE_UFLAG))
+						count++;
+				}
+				return (count);
+			}
+			else
+				throw std::runtime_error("channel_members_count: channel name does not exist");
+		}
+
 		bool	channel_is_empty(const std::string& channel) const
 		{
 			channel_const_iterator	it = _channels.find(channel);
@@ -677,6 +696,15 @@ class	Data {
 				if ((it->second._mode & USER_LIMIT_CFLAG) != 0 && it->second._members.size() >= it->second._members_limit)
 					return (true);
 			}
+			return (false);
+		}
+
+		bool	channel_is_visible(const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end() && !check_channel_flags(channel, SECRET_CFLAG))
+				return (true);
 			return (false);
 		}
 
