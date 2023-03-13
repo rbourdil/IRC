@@ -147,12 +147,24 @@ bool	match_mode_params(const std::vector<std::string>& params)
 {
 	std::vector<std::string>::const_iterator	itv = params.begin() + 2;
 	std::string::const_iterator					its = params[1].begin();
+	bool										add = false;
 
 	if (*its == '+' || *its == '-')
+	{
+		if (*its == '+')
+			add = true;
 		++its;
+	}
 	for (; its != params[1].end(); ++its)
 	{
-		if (*its == 'o' || *its == 'v' || *its == 'k' || *its == 'b' || *its == 'e' || *its == 'I')
+		if (*its == 'o' || *its == 'v')
+		{
+			if (itv == params.end())
+				return (false);
+			else
+				++itv;
+		}
+		else if (add && (*its == 'k' || *its == 'l' || *its == 'b' || *its == 'e' || *its == 'I'))
 		{
 			if (itv == params.end())
 				return (false);

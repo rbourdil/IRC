@@ -139,7 +139,17 @@ void	Command::user_mode(int fd, const std::vector<std::string>& params)
 
 void	Command::join(int fd, std::string channel, std::string key)
 {
-	if (!valid_channel(channel))
+	if (channel == "0")
+	{
+		std::set<std::string>					channel_list = _data->get_user_channel_list(fd);
+		std::set<std::string>::const_iterator	it = channel_list.begin();
+		while (it != channel_list.end())
+		{
+			part(fd, *it, std::string());
+			it++;
+		}
+	}
+	else if (!valid_channel(channel))
 	{
 		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
@@ -150,16 +160,6 @@ void	Command::join(int fd, std::string channel, std::string key)
 		_args.push_back(_data->get_srvname());
 		_args.push_back(key);
 		err_badchannel_key(fd, _args);
-	}
-	else if (channel == "0")
-	{
-		const std::set<std::string>&	channel_list = _data->get_user_channel_list(fd);
-		std::set<std::string>::const_iterator	it = channel_list.begin();
-		while (it != channel_list.end())
-		{
-			part(fd, *it, std::string());
-			it++;
-		}
 	}
 	else if (_data->user_channel_count(fd) > MAX_CHAN_COUNT)
 	{
@@ -458,7 +458,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 					if (add)
 					{
 						std::stringstream	ss(*itv++);
-						unsigned int		limit;
+						unsigned int		limit = 0;
 						ss >> limit;
 
 						if (ss)
@@ -540,13 +540,18 @@ void	Command::join_dispatch(int fd, const std::vector<std::string>& params)
 		std::vector<std::string>	keys;
 		if (params.size() == 2)
 			keys = parse_list(params[1]);
-		std::vector<std::string>::iterator	itc, itk;
-		for (itc = channels.begin(), itk = keys.begin(); itc != channels.end() && itk != keys.end(); itc++, itk++)
+		std::vector<std::string>::iterator	itc = channels.begin();
+		std::vector<std::string>::iterator	itk = keys.begin();
+		for (; itc != channels.end() && itk != keys.end(); itc++, itk++)
 		{
 			join(fd, *itc, *itk);
+			_args.clear();
 		}
 		for (; itc != channels.end(); itc++)
+		{
 			join(fd, *itc, std::string());
+			_args.clear();
+		}
 	}	
 }
 

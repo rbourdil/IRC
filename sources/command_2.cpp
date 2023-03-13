@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/11 12:47:50 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/13 11:28:56 by rbourdil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -103,6 +103,7 @@ void	Command::names(int fd, const std::vector<std::string>& params)
 				rpl_nam_reply(fd, _args);
 				_args.erase(_args.begin() + 2, _args.end());
 				rpl_endof_names(fd, _args);
+				_args.pop_back();
 			}
 		}
 		else
