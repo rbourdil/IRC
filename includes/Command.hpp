@@ -10,6 +10,13 @@
 #include "parser.hpp"
 #include "Reply.hpp"
 
+struct Scanner {
+	std::string::iterator _start;
+	std::string::iterator _current;
+	
+	Scanner() : _start(), _current() {}
+};
+
 class	Command {
 
 	typedef void (Command::*FuncPtr)(int, const std::vector<std::string>&);
@@ -41,7 +48,10 @@ class	Command {
 		void	join_dispatch(int fd, const std::vector<std::string>& params);
 		void	part_dispatch(int fd, const std::vector<std::string>& params);
 		void	mode_dispatch(int fd, const std::vector<std::string>& params);
-		bool 	isTopLevelDomain(std::string target);
+		void	send_to_chan(int fd, std::string &channel, std::string &message);
+		void	send_to_nick(int fd, std::string &nick, std::string &message);
+		int		parse_target(int fd, std::string &target);
+		bool	is_valid_host(std::string &host);
 		
 		std::string	channel_mode_str(const std::string& channel);
 		std::string	user_mode_str(int fd);

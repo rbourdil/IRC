@@ -391,6 +391,25 @@ class	Data {
 			return (false);
 		}
 
+		int		user_is_unique(std::string &user)
+		{
+			std::map<int, Client>::iterator  it = _clients.begin();
+			std::pair<std::set<std::string>::iterator,bool> ret;
+			int	repeat = 0;
+			while (it != _clients.end())
+			{
+				if (it->second._username == user)
+					repeat++;
+				if (repeat > 1)
+					return -1;
+				++it;
+			}
+			if (repeat == 1)
+				return (it->first);
+			else
+				return (0);
+		}
+
 			// user lookup
 
 		std::vector<std::string>	list_users(void) const
@@ -460,6 +479,26 @@ class	Data {
 			}
 			else
 				throw std::runtime_error("get_friends: no account registered with this file descriptor");
+		}
+
+		bool	user_nick_match(std::string &nickname, std::string &user)
+		{
+			int fd = get_user_fd(nickname);
+			client_iterator it = _clients.find(fd);
+			if (it->second._username == user)
+				return true;
+			return false;
+		}
+
+		bool	host_fd_match(int fd, std::string &host)
+		{
+			client_iterator it = _clients.find(fd);
+			if (it->second._hostname == host)
+				return true;
+			else if (it->second._hostaddress == host)
+				return true;
+			else
+				return false;
 		}
 
 		bool	is_in_channel(int fd, const std::string& channel) const
