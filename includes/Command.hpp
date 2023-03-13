@@ -43,6 +43,7 @@ class	Command {
 		void	pong(int fd, const std::vector<std::string>& params);
 		void	privmsg(int fd, const std::vector<std::string>& params);
 		void	list(int fd, const std::vector<std::string>& params);
+		void	notice(int fd, const std::vector<std::string>& params);
 
 		// helper functions
 		void	quit_dispatch(int fd, const std::vector<std::string>& params);
@@ -52,6 +53,9 @@ class	Command {
 		void	send_to_chan(int fd, std::string &channel, std::string &message);
 		void	send_to_nick(int fd, std::string &nick, std::string &message);
 		int		parse_target(int fd, std::string &target);
+		int		parse_target_notice(std::string &target);
+		void	send_to_chan_notice(int fd, std::string &channel, std::string &message);
+		void	send_to_nick_notice(int fd, std::string &nick, std::string &message);
 		bool	is_valid_host(std::string &host);
 		
 		std::string	channel_mode_str(const std::string& channel);

@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/13 22:25:59 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/13 22:50:21 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -212,13 +212,11 @@ int		Command::parse_target(int fd, std::string &target)
 			if (target.at(0) == '#')
 			{
 				err_nosuch_channel(fd, _args);
-				// _args.pop_back();
 				return -1;
 			}
 			else
 			{
 				err_nosuch_nick(fd, _args);
-				// _args.pop_back();
 				return -1;
 			}
 		}
@@ -260,7 +258,6 @@ int		Command::parse_target(int fd, std::string &target)
 							{
 								_args.push_back(nickname);
 								err_nosuch_nick(fd, _args);
-								// _args.pop_back();
 								return -1;
 							}
 						}
@@ -269,7 +266,6 @@ int		Command::parse_target(int fd, std::string &target)
 					{
 						_args.push_back(nickname);
 						err_nosuch_nick(fd, _args);
-						// _args.pop_back();
 						return -1;
 					}
 				}
@@ -285,7 +281,6 @@ int		Command::parse_target(int fd, std::string &target)
 					_args.push_back(user);
 					_args.push_back("user is not unique");
 					err_toomany_targets(fd, _args);
-					// _args.erase(_args.begin() + 1, _args.end());
 					return -1;
 				}
 				else if (valid_user == 0)
@@ -293,7 +288,6 @@ int		Command::parse_target(int fd, std::string &target)
 					_args.push_back(user);
 					error_user(fd, _args);
 					return -1;
-					// _args.pop_back();
 				}
 				++scanner._current;
 				scanner._start = scanner._current;
@@ -312,7 +306,6 @@ int		Command::parse_target(int fd, std::string &target)
 						{
 							_args.push_back(host);
 							error_host_notmatch(fd, _args);
-							// _args.pop_back();
 							return -1;
 						}
 					}
@@ -335,7 +328,6 @@ int		Command::parse_target(int fd, std::string &target)
 				{
 					_args.push_back(host);
 					error_host(fd, _args);
-					// _args.pop_back();
 					return -1;
 				}
 			}
@@ -350,7 +342,6 @@ int		Command::parse_target(int fd, std::string &target)
 					_args.push_back(user);
 					_args.push_back("user is not unique");
 					err_toomany_targets(fd, _args);
-					// _args.erase(_args.begin() + 1, _args.end());
 					return -1;
 				}
 				else if (valid_user == 0)
@@ -358,7 +349,6 @@ int		Command::parse_target(int fd, std::string &target)
 					_args.push_back(user);
 					error_user(fd, _args);
 					return -1;
-					// _args.pop_back();
 				}
 				++scanner._current;
 				std::string servername(scanner._current, target.end());
@@ -401,8 +391,6 @@ void	Command::privmsg(int fd, const std::vector<std::string>& params)
 		std::string message = params[1];
 		std::vector<std::string>::iterator target_iter = target.begin();
 		std::cout << "first element of vector: " << *target_iter << std::endl;
-		int dest_fd = parse_target(fd, *target_iter);
-		std::cout << "dest_fd: " << dest_fd << std::endl;
 		int ret_fd;
 		while (target_iter != target.end())
 		{
@@ -424,6 +412,45 @@ void	Command::privmsg(int fd, const std::vector<std::string>& params)
 			else
 				++target_iter;
 			_args.erase(_args.begin() + 1, _args.end());
+		}
+	}
+}
+
+void	Command::notice(int fd, const std::vector<std::string>& params)
+{
+	int p_size = params.size();
+	if (p_size == 0)
+		return;
+	else if (p_size == 1)
+		return;
+	else
+	{
+		std::vector<std::string> target = parse_list(params[0]);
+		std::string message = params[1];
+		std::vector<std::string>::iterator target_iter = target.begin();
+		// std::cout << "first element of vector: " << *target_iter << std::endl;
+		// int dest_fd = parse_target_notice(*target_iter);
+		// std::cout << "dest_fd: " << dest_fd << std::endl;
+		int ret_fd;
+		while (target_iter != target.end())
+		{
+			ret_fd = parse_target_notice(*target_iter);
+			if (ret_fd != -1)
+			{
+				if (ret_fd == -5)
+					send_to_chan(fd, *target_iter, message);
+				else if (ret_fd == -6)
+					send_to_nick(fd, *target_iter, message);
+				else
+				{
+					std::string sender_nick = _data->get_nickname(fd);
+					message = sender_nick + ": " + message + "\n";
+					send(ret_fd, message.c_str(), message.size(), 0);
+				}
+				++target_iter;
+			}
+			else
+				++target_iter;
 		}
 	}
 }
@@ -575,4 +602,252 @@ bool	Command::is_valid_host(std::string &host)
 		freeaddrinfo(result);
 		
 		return true;
+}
+
+
+int		Command::parse_target_notice(std::string &target)
+{
+	if (_data->channel_exists(target))
+	{
+		std::cout << "it is a channel" << std::endl;
+		return -5;
+	}
+	else if (_data->nickname_exists(target))
+	{
+		std::cout << "it is a nickname" << std::endl;
+		return -6;
+	}
+	else
+	{
+		Scanner scanner;
+		scanner._current = target.begin();
+		scanner._start = scanner._current;
+		size_t pos = target.find_first_of("!@%", scanner._current - target.begin());
+		if (pos == std::string::npos)
+		{
+			if (target.at(0) == '#')
+			{
+				return -1;
+			}
+			else
+			{
+				return -1;
+			}
+		}
+		else
+		{
+			scanner._current = scanner._start + pos;
+			std::cout << "scanner._current: " << *scanner._current;
+			if (*scanner._current == '!')
+			{
+				std::cout << "it is a !: " << *scanner._current << std::endl;
+				std::string nickname(scanner._start, scanner._current);
+				std::cout << "nickname is: " << nickname << std::endl;
+				if (!_data->nickname_exists(nickname))
+				{
+					return -1;
+				}
+				else
+				{
+					++scanner._current;
+					scanner._start = scanner._current;
+					pos = target.find_first_of("@", scanner._current - target.begin());
+					scanner._current = target.begin() + pos;
+					std::string user(scanner._start, scanner._current);				
+					std::cout << "USER: nickname!user is: " << user << std::endl;
+					int dest_fd = _data->get_user_fd(nickname);
+					if (_data->user_nick_match(nickname, user))
+					{
+						++scanner._current;
+						std::string host(scanner._current, target.end());
+						std::cout << "HOST: nickname!user@host is: " << host << std::endl;
+						if (is_valid_host(host))
+						{
+							if (_data->host_fd_match(dest_fd, host))
+								return (dest_fd);
+							else
+								return -1;
+						}
+					}
+					else
+						return -1;
+				}
+
+			}
+			else if (*scanner._current == '%')
+			{
+				std::string user(scanner._start, scanner._current);
+				std::cout << "user is: " << user << std::endl;
+				int valid_user = _data->user_is_unique(user);
+				if (valid_user == -1)
+					return -1;
+				else if (valid_user == 0)
+					return -1;
+				++scanner._current;
+				scanner._start = scanner._current;
+				pos = target.find_first_of("@", scanner._current - target.begin());
+				scanner._current = target.begin() + pos;
+				std::string host(scanner._start, scanner._current);
+				if (is_valid_host(host))
+				{
+					if (pos == std::string::npos)
+					{
+						
+						std::cout << "HOST: user'%'host: " << host << std::endl;
+						if (_data->host_fd_match(valid_user, host))
+							return (valid_user);
+						else
+							return -1;
+					}
+					else
+					{
+						std::cout << "HOST: user'%'host@servername: " << host << std::endl;
+						++scanner._current;
+						std::string servername(scanner._current, target.end());
+						std::cout << "SERVERNAME: user'%'host@servername: " << servername << std::endl;
+						if (servername == _data->get_srvname())
+							return (valid_user);
+						else
+							return -1;
+					}
+				}
+				else
+					return -1;
+			}
+			else if (*scanner._current == '@')
+			{
+				std::cout << "it is a @: " << *scanner._current << std::endl;
+				std::string user(scanner._start, scanner._current);
+				std::cout << "user is: " << user << std::endl;
+				int valid_user = _data->user_is_unique(user);
+				if (valid_user == -1)
+					return -1;
+				else if (valid_user == 0)
+					return -1;
+				++scanner._current;
+				std::string servername(scanner._current, target.end());
+				std::cout << "SERVERNAME: user@servername: " << servername << std::endl;
+				if (servername == _data->get_srvname())
+					return (valid_user);
+				else
+					return -1;
+			}
+			else
+				return -1;
+		}
+	}
+	std::cout << "extra return" << std::endl;
+	return -1;
+}
+
+
+void	Command::send_to_chan_notice(int fd, std::string &channel, std::string &message)
+{
+	if (_data->check_user_flags(fd, RESTRICTED_UFLAG))
+	{
+		std::cout << "nani2" << std::endl;
+		return ;
+	}
+	else if (_data->check_channel_flags(channel, NO_MESSAGES_CFLAG))
+	{
+		std::cout << "nani3" << std::endl;
+		if (_data->is_in_channel(fd, channel))
+		{
+			if (_data->check_channel_flags(channel, MODERATED_CFLAG))
+			{
+				if (_data->check_user_flags(fd, OPER_UFLAG))
+				{
+					std::vector<int> users_chan = _data->get_members_list_fd(channel);
+					std::vector<int>::iterator it = users_chan.begin();
+					std::string original_message = message;
+					for (; it != users_chan.end(); ++it)
+					{
+						if (*it != fd)
+						{
+							if (_data->check_user_flags(*it, AWAY_UFLAG))
+							{
+								continue;
+							}
+							else
+							{
+								std::string sender_nick = _data->get_nickname(fd);
+								message = sender_nick + ": " + message + "\n";
+								send(*it, message.c_str(), message.size(), 0);
+								message = original_message;
+							}
+						}
+					}
+				}
+				else
+					return;
+			}
+		}
+		else
+			return;
+	}
+	else if (_data->check_channel_flags(channel, MODERATED_CFLAG))
+	{
+		std::cout << "nani4" << std::endl;
+		if (_data->check_user_flags(fd, OPER_UFLAG))
+		{
+			std::vector<int> users_chan = _data->get_members_list_fd(channel);
+			std::vector<int>::iterator it = users_chan.begin();
+			std::string original_message = message;
+			for (; it != users_chan.end(); ++it)
+			{
+				if (_data->check_user_flags(*it, AWAY_UFLAG))
+					continue;
+				else
+				{
+					std::string sender_nick = _data->get_nickname(fd);
+					message = sender_nick + ": " + message + "\n";
+					send(*it, message.c_str(), message.size(), 0);
+					message = original_message;
+				}
+			}
+		}
+		else
+		{
+			return;
+		}
+	}
+	else
+	{
+		std::vector<int> users_chan = _data->get_members_list_fd(channel);
+		std::vector<int>::iterator it = users_chan.begin();
+		std::string original_message = message;
+		for (; it != users_chan.end(); ++it)
+		{
+			if (*it != fd)
+			{
+				if (_data->check_user_flags(*it, AWAY_UFLAG))
+				{
+					continue;
+				}
+				else
+				{
+					std::string sender_nick = _data->get_nickname(fd);
+					message = sender_nick + ": " + message + "\n";
+					send(*it, message.c_str(), message.size(), 0);
+					message = original_message;
+				}	
+			}
+		}
+	}
+	std::cout << "nani5" << std::endl;
+}	
+
+void	Command::send_to_nick_notice(int fd, std::string &nick, std::string &message)
+{
+	int dest_fd = _data->get_user_fd(nick);
+	if (_data->check_user_flags(dest_fd, AWAY_UFLAG))
+	{
+		return;
+	}
+	else
+	{
+		std::string sender_nick = _data->get_nickname(fd);
+		message = sender_nick + ": " + message + "\n";	
+		send(dest_fd, message.c_str(), message.size(), 0);
+	}
 }
