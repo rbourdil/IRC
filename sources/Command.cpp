@@ -146,6 +146,7 @@ void	Command::join(int fd, std::string channel, std::string key)
 		while (it != channel_list.end())
 		{
 			part(fd, *it, std::string());
+			_args.clear();
 			it++;
 		}
 	}
@@ -195,17 +196,17 @@ void	Command::join(int fd, std::string channel, std::string key)
 		_args.push_back(nick);
 		rpl_nam_reply(fd, _args);
 	}
-	else if (_data->check_channel_flags(channel, INVITE_ONLY_CFLAG))
+	else if (_data->check_channel_flags(channel, INVITE_ONLY_CFLAG) && !_data->match_invit_masks(fd, channel))
 	{
 		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
 		err_invite_onlychan(fd, _args);
 	}
-	else if (_data->channel_is_full(channel))
+	else if (_data->is_banned(fd, channel))
 	{
 		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
-		err_channel_isfull(fd, _args);
+		err_banned_fromchan(fd, _args);
 	}
 	else if (!_data->channel_authenticate(channel, key))
 	{
@@ -213,7 +214,13 @@ void	Command::join(int fd, std::string channel, std::string key)
 		_args.push_back(channel);
 		err_badchannel_key(fd, _args);
 	}
-	else // user joins an existing channel
+	else if (_data->channel_is_full(channel))
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back(channel);
+		err_channel_isfull(fd, _args);
+	}
+		else // user joins an existing channel
 	{
 		_data->add_user_to_channel(fd, channel);
 		_data->add_channel_to_user(fd, channel);
@@ -308,7 +315,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 	else if (params.size() == 1) // if MODE <channel> alone, list modes
 	{
 		_args.push_back(channel);
-		_args.push_back(channel_mode_str(channel));
+		_args.push_back(_data->get_channel_flags_str(channel));
 		rpl_channel_modeis(fd, _args);	
 	}
 	else if ((char_mode = valid_channel_mode(params[1])) != 0)
@@ -339,6 +346,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 		}
 		for (; itf != flags.end(); itf++)
 		{
+			std::cerr << "DEBUG " << *itv << std::endl;
 			switch (*itf) 
 			{
 				case 'o':
@@ -432,28 +440,27 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 						_data->unset_channel_flags(channel, TOPIC_OPER_CFLAG);
 					break;
 				case 'k':
-					if (add)
+				{
+					std::string	key = *itv++;
+					if (_data->check_channel_flags(channel, KEY_CFLAG))
 					{
-						std::string	key = *itv++;
-						if (_data->check_channel_flags(channel, KEY_CFLAG))
-						{
-							_args.push_back(channel);
-							err_keyset(fd, _args);
-						}
-						else if (!valid_key(key))
-						{
-							_args.push_back(key);
-							err_badchannel_key(fd, _args);
-						}
-						else
-						{
-							_data->set_channel_flags(channel, KEY_CFLAG);
-							_data->set_channel_key(channel, key);
-						}
+						_args.push_back(channel);
+						err_keyset(fd, _args);
+					}
+					else if (!valid_key(key))
+					{
+						_args.push_back(key);
+						err_badchannel_key(fd, _args);
+					}
+					else if (add)
+					{
+						_data->set_channel_flags(channel, KEY_CFLAG);
+						_data->set_channel_key(channel, key);
 					}
 					else
 						_data->unset_channel_flags(channel, KEY_CFLAG);
 					break;
+				}
 				case 'l':
 					if (add)
 					{
@@ -473,31 +480,90 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 				case 'b':
 					if (add)
 					{
-						_data->set_channel_flags(channel, BAN_MASK_CFLAG);
-						_data->set_ban_mask(channel, *itv++);
+						if (itv != params.end())
+						{
+							_data->set_channel_flags(channel, BAN_MASK_CFLAG);
+							_data->add_ban_mask(channel, *itv++);
+						}
+						else
+						{
+							const std::set<std::string>&	ban_masks = _data->get_ban_masks(channel);
+							std::set<std::string>::const_iterator	itm = ban_masks.begin();
+							_args.push_back(channel);
+							for (; itm != ban_masks.end(); ++itm)
+							{
+								_args.push_back(*itm);
+								rpl_ban_list(fd, _args);
+								_args.pop_back();
+							}
+							rpl_endof_banlist(fd, _args);
+						}
 					}
 					else
+					{
 						_data->unset_channel_flags(channel, BAN_MASK_CFLAG);
+						_data->remove_ban_mask(channel, *itv++);
+					}
 					break;
 				case 'e':
 					if (add)
 					{
-						_data->set_channel_flags(channel, EXCEPT_MASK_CFLAG);
-						_data->set_except_mask(channel, *itv++);
+						if (itv != params.end())
+						{
+							_data->set_channel_flags(channel, EXCEPT_MASK_CFLAG);
+							_data->add_except_mask(channel, *itv++);
+						}
+						else
+						{
+							const std::set<std::string>&	except_masks = _data->get_except_masks(channel);
+							std::set<std::string>::const_iterator	itm = except_masks.begin();
+							_args.push_back(channel);
+							for (; itm != except_masks.end(); ++itm)
+							{
+								_args.push_back(*itm);
+								rpl_except_list(fd, _args);
+								_args.pop_back();
+							}
+							rpl_endof_exceptlist(fd, _args);
+						}
 					}
 					else
+					{
 						_data->unset_channel_flags(channel, EXCEPT_MASK_CFLAG);
+						_data->remove_except_mask(channel, *itv++);
+					}
 					break;
 				case 'I':
 					if (add)
 					{
-						_data->set_channel_flags(channel, INVIT_MASK_CFLAG);
-						_data->set_except_mask(channel, *itv++);
+						if (itv != params.end())
+						{
+							_data->set_channel_flags(channel, INVIT_MASK_CFLAG);
+							_data->add_invit_mask(channel, *itv++);
+						}
+						else
+						{
+							const std::set<std::string>&	invit_masks = _data->get_invit_masks(channel);
+							std::set<std::string>::const_iterator	itm = invit_masks.begin();
+							_args.push_back(channel);
+							for (; itm != invit_masks.end(); ++itm)
+							{
+								_args.push_back(*itm);
+								rpl_invite_list(fd, _args);
+								_args.pop_back();
+							}
+							rpl_endof_invitelist(fd, _args);
+						}
+
 					}
 					else
+					{
 						_data->unset_channel_flags(channel, INVIT_MASK_CFLAG);
+						_data->remove_invit_mask(channel, *itv++);
+					}
 					break;
 			}
+			_args.erase(_args.begin() + 1, _args.end());
 		}
 	}
 }
@@ -610,29 +676,6 @@ std::string	Command::user_mode_str(int fd)
 	ret += _data->get_nickname(fd);
 	ret += " ";
 	ret += _data-> get_user_flags_str(fd);
-	return (ret);
-}
-
-std::string	Command::channel_mode_str(const std::string& channel)
-{
-	std::string	ret;
-
-	ret += _data->get_channel_flags_str(channel);
-	if (_data->check_channel_flags(channel, BAN_MASK_CFLAG))
-	{
-		ret += " ";
-		ret += _data->get_ban_mask(channel);
-	}
-	if (_data->check_channel_flags(channel, EXCEPT_MASK_CFLAG))
-	{
-		ret += " ";
-		ret += _data->get_except_mask(channel);
-	}
-	if (_data->check_channel_flags(channel, INVIT_MASK_CFLAG))
-	{
-		ret += " ";
-		ret += _data->get_invit_mask(channel);
-	}
 	return (ret);
 }
 

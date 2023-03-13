@@ -147,24 +147,24 @@ bool	match_mode_params(const std::vector<std::string>& params)
 {
 	std::vector<std::string>::const_iterator	itv = params.begin() + 2;
 	std::string::const_iterator					its = params[1].begin();
-	bool										add = false;
+	bool										add = true;
 
 	if (*its == '+' || *its == '-')
 	{
-		if (*its == '+')
-			add = true;
+		if (*its == '-')
+			add = false;
 		++its;
 	}
 	for (; its != params[1].end(); ++its)
 	{
-		if (*its == 'o' || *its == 'v')
+		if (*its == 'o' || *its == 'v' || *its == 'k' || (add && *its == 'l'))
 		{
 			if (itv == params.end())
 				return (false);
 			else
 				++itv;
 		}
-		else if (add && (*its == 'k' || *its == 'l' || *its == 'b' || *its == 'e' || *its == 'I'))
+		else if (!add && (*its == 'b' || *its == 'e' || *its == 'I'))
 		{
 			if (itv == params.end())
 				return (false);
@@ -201,6 +201,40 @@ bool	valid_key(const std::string& key)
 		it++;
 	std::string::difference_type	len = it - key.begin();
 	if (it != key.end() || len == 0 || len > 23)
+		return (false);
+	return (true);
+}
+
+bool	match_mask(const std::string& user_info, const std::string& mask)
+{
+	std::string::const_iterator	ituser = user_info.begin(), itmask = mask.begin();
+
+	while (ituser != user_info.end() && itmask != mask.end())
+	{
+		if (*itmask == '*')
+		{
+			while (itmask != mask.end() && *itmask++ == '*')
+				;
+			if (itmask == mask.end())
+				return (true);
+			else
+			{
+				while (*ituser != *itmask)
+					ituser++;
+			}
+		}
+		else if (*itmask == '\\' && itmask + 1 != mask.end() && (*(itmask + 1) == '*' || *(itmask + 1) == '?'))
+		{
+			itmask++;
+			if (*ituser != *itmask)
+				return (false);
+		}
+		else if (*itmask != '?' && *ituser != *itmask)
+			return (false);
+		itmask++;
+		ituser++;
+	}
+	if (ituser == user_info.end() && itmask != mask.end())
 		return (false);
 	return (true);
 }

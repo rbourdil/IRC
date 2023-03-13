@@ -7,6 +7,7 @@
 #include <set>
 #include <iostream>
 #include "headers.hpp"
+#include "parser.hpp"
 
 // USER_FLAGS
 #define AWAY_UFLAG 0x1
@@ -70,9 +71,9 @@ struct	Channel {
 	std::string			_key;
 	std::map<int, int>	_members;
 	int					_mode;
-	std::string			_ban_mask;
-	std::string			_except_mask;
-	std::string			_invit_mask;
+	std::set<std::string>	_ban_masks;
+	std::set<std::string>	_except_masks;
+	std::set<std::string>	_invit_masks;
 	unsigned int		_members_limit;
 
 	Channel(int mode) : _mode(mode), _members_limit(0) { }
@@ -301,28 +302,52 @@ class	Data {
 				it->second._members_limit = limit;
 		}
 
-		void	set_ban_mask(const std::string& channel, const std::string& banmask)
+		void	add_ban_mask(const std::string& channel, const std::string& banmask)
 		{
 			channel_iterator	it = _channels.find(channel);
 
 			if (it != _channels.end())
-				it->second._ban_mask = banmask;
+				it->second._ban_masks.insert(banmask);
 		}
 
-		void	set_except_mask(const std::string& channel, const std::string& exceptmask)
+		void	add_except_mask(const std::string& channel, const std::string& exceptmask)
 		{
 			channel_iterator	it = _channels.find(channel);
 
 			if (it != _channels.end())
-				it->second._except_mask = exceptmask;
+				it->second._except_masks.insert(exceptmask);
 		}
 
-		void	set_invite_mask(const std::string& channel, const std::string& invitmask)
+		void	add_invit_mask(const std::string& channel, const std::string& invitmask)
 		{
 			channel_iterator	it = _channels.find(channel);
 
 			if (it != _channels.end())
-				it->second._invit_mask = invitmask;
+				it->second._invit_masks.insert(invitmask);
+		}
+
+		void	remove_ban_mask(const std::string& channel, const std::string& banmask)
+		{
+			channel_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				it->second._ban_masks.erase(banmask);
+		}
+
+		void	remove_except_mask(const std::string& channel, const std::string& exceptmask)
+		{
+			channel_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				it->second._except_masks.erase(exceptmask);
+		}
+
+		void	remove_invit_mask(const std::string& channel, const std::string& invit_mask)
+		{
+			channel_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				it->second._invit_masks.erase(invit_mask);
 		}
 
 		void	set_member_status(const std::string& channel, int fd, int status)
@@ -675,34 +700,107 @@ class	Data {
 				throw std::runtime_error("get_channel_key: channel name does not exist");
 		}
 
-		const std::string&	get_ban_mask(const std::string& channel) const
+		const std::set<std::string>&	get_ban_masks(const std::string& channel) const
 		{
 			channel_const_iterator	it = _channels.find(channel);
 
 			if (it != _channels.end())
-				return (it->second._ban_mask);
+				return (it->second._ban_masks);
 			else
 				throw std::runtime_error("get_ban_mask: channel name does not exist");
 		}
 
-		const std::string&	get_except_mask(const std::string& channel) const
+		const std::set<std::string>&	get_except_masks(const std::string& channel) const
 		{
 			channel_const_iterator	it = _channels.find(channel);
 
 			if (it != _channels.end())
-				return (it->second._except_mask);
+				return (it->second._except_masks);
 			else
 				throw std::runtime_error("get_except_mask: channel name does not exist");
 		}
 
-		const std::string&	get_invit_mask(const std::string& channel) const
+		const std::set<std::string>&	get_invit_masks(const std::string& channel) const
 		{
 			channel_const_iterator	it = _channels.find(channel);
 
 			if (it != _channels.end())
-				return (it->second._invit_mask);
+				return (it->second._invit_masks);
 			else
 				throw std::runtime_error("get_invit_mask: channel name does not exist");
+		}
+
+		bool	match_ban_masks(int fd, const std::string& channel) const
+		{
+			channel_const_iterator	itchan = _channels.find(channel);
+			std::string				uinfo = get_user_info(fd);
+
+			if (itchan == _channels.end())
+				return (false);
+			std::set<std::string>::const_iterator	itmask = itchan->second._ban_masks.begin();
+			for (; itmask != itchan->second._ban_masks.end(); itmask++)
+			{
+				if (match_mask(uinfo, *itmask))
+					return (true);
+			}
+			return (false);
+		}
+
+		bool	match_except_masks(int fd, const std::string& channel) const
+		{
+			channel_const_iterator	itchan = _channels.find(channel);
+			std::string				uinfo = get_user_info(fd);
+
+			if (itchan == _channels.end())
+				return (false);
+			std::set<std::string>::const_iterator	itmask = itchan->second._except_masks.begin();
+			for (; itmask != itchan->second._except_masks.end(); itmask++)
+			{
+				if (match_mask(uinfo, *itmask))
+					return (true);
+			}
+			return (false);
+		}
+
+		bool	match_invit_masks(int fd, const std::string& channel) const
+		{
+			channel_const_iterator	itchan = _channels.find(channel);
+			std::string				uinfo = get_user_info(fd);
+
+			if (itchan == _channels.end())
+				return (false);
+			std::set<std::string>::const_iterator	itmask = itchan->second._invit_masks.begin();
+			for (; itmask != itchan->second._invit_masks.end(); itmask++)
+			{
+				if (match_mask(uinfo, *itmask))
+					return (true);
+			}
+			return (false);
+		}
+
+		bool	is_banned(int fd, const std::string& channel) const
+		{
+			channel_const_iterator	itchan = _channels.find(channel);
+			std::string				uinfo = get_user_info(fd);
+
+			if (itchan == _channels.end())
+				return (false);
+			const std::set<std::string>&	ban_masks = itchan->second._ban_masks;
+			const std::set<std::string>&	except_masks = itchan->second._except_masks;
+			std::set<std::string>::const_iterator		itmask = ban_masks.begin();
+			for (; itmask != ban_masks.end(); itmask++)
+			{
+				if (match_mask(uinfo, *itmask))
+				{
+					for (itmask = except_masks.begin(); itmask != except_masks.end(); itmask++)
+					{
+						if (match_mask(uinfo, *itmask))
+							return (false);
+					}
+					return (true);
+				}
+			}
+			return (false);
 		}
 
 		bool	check_channel_flags(const std::string& channel, int flags) const

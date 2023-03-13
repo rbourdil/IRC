@@ -94,6 +94,7 @@ bool	valid_username(const std::string&);
 bool	valid_user_mode(const std::string&);
 int		valid_channel_mode(const std::string&);
 bool	match_mode_params(const std::vector<std::string>&);
+bool	match_mask(const std::string&, const std::string&);
 bool	valid_channel(const std::string&);
 bool	valid_key(const std::string&);
 
