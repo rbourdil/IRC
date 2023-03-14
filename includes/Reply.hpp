@@ -46,6 +46,7 @@ void	err_cant_killserver(int dest_fd, const std::vector<std::string> args);
 void	err_noorigin(int dest_fd, const std::vector<std::string> args);
 void	err_users_disabled(int dest_fd, const std::vector<std::string> args);
 void	err_filerror(int dest_fd, const std::vector<std::string> args);
+void	error_no_operhost(int dest_fd, const std::vector<std::string>& args);
 
 /******************************REPLIES***********************************/
 

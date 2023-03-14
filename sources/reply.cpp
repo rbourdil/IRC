@@ -6,11 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/03 16:59:07 by pcamaren          #+#    #+#             */
-<<<<<<< HEAD
-/*   Updated: 2023/03/14 15:22:39 by rbourdil         ###   ########.fr       */
-=======
-/*   Updated: 2023/03/14 16:01:03 by pcamaren         ###   ########.fr       */
->>>>>>> a422d52b6614c2a5605a2e4a0ef7ece0be9c5c55
+/*   Updated: 2023/03/14 18:26:02 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -683,6 +679,13 @@ void	err_filerror(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 424 ";
 	std::string err_message = prefix + " :File error doing " + args[2] + "on" + args[3] + "\r\n";
+	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
+}
+//491
+void	error_no_operhost(int dest_fd, const std::vector<std::string>& args)
+{
+	std::string	prefix = ":" + args[0] + " 491 ";
+	std::string err_message = prefix + " :NO O-lines for your host\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //replies
