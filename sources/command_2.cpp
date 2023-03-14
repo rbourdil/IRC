@@ -6,13 +6,19 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/14 16:12:19 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/14 17:30:59 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/Command.hpp"
 
 //TOPIC CHECK IF CHANNEL IS SECRET
+
+void	Command::cap(int fd, const std::vector<std::string>& params)
+{
+	(void)fd;
+	(void)params;
+}
 
 void	Command::topic(int fd, const std::vector<std::string>& params)
 {
@@ -25,6 +31,8 @@ void	Command::topic(int fd, const std::vector<std::string>& params)
 			_args.push_back("TOPIC");
 			err_need_moreparams(fd, _args);
 		}
+		else if (p_size > 2)
+			return;
 		else
 		{
 			const std::string channel = params[0];
@@ -92,12 +100,15 @@ void	Command::names(int fd, const std::vector<std::string>& params)
 				std::vector<std::string>::iterator iter_users = users_channel.begin();
 				for (; iter_users != users_channel.end(); ++iter_users)
 				{
-					std::string user = *iter_users;
-					if (_data->check_member_status(*iter_channels, *iter_fd, OPER_MFLAG))
-						user.insert(0,"@");
-					else if(_data->check_member_status(*iter_channels, *iter_fd, VOICE_MFLAG))
-						user.insert(0, "+");
-					_args.push_back(user);
+					if (!_data->check_user_flags(*iter_fd, INVISIBLE_UFLAG))
+					{
+						std::string user = *iter_users;
+						if (_data->check_member_status(*iter_channels, *iter_fd, OPER_MFLAG))
+							user.insert(0,"@");
+						else if(_data->check_member_status(*iter_channels, *iter_fd, VOICE_MFLAG))
+							user.insert(0, "+");
+						_args.push_back(user);
+					}
 					++iter_fd;
 				}
 				rpl_nam_reply(fd, _args);
@@ -139,13 +150,16 @@ void	Command::names(int fd, const std::vector<std::string>& params)
 					std::vector<std::string>::iterator iter_users = users_channel.begin();
 					for (; iter_users != users_channel.end(); ++iter_users)
 					{
-						std::string user = *iter_users;
-						if (_data->check_member_status(*chan_iter, *iter_fd, OPER_MFLAG))
-							user.insert(0,"@");
-						else if(_data->check_member_status(*chan_iter, *iter_fd, VOICE_MFLAG))
-							user.insert(0, "+");
-						_args.push_back(user);
-						++iter_fd;
+						if (!_data->check_user_flags(*iter_fd, INVISIBLE_UFLAG))
+						{
+							std::string user = *iter_users;
+							if (_data->check_member_status(*chan_iter, *iter_fd, OPER_MFLAG))
+								user.insert(0,"@");
+							else if(_data->check_member_status(*chan_iter, *iter_fd, VOICE_MFLAG))
+								user.insert(0, "+");
+							_args.push_back(user);
+							++iter_fd;
+						}
 					}
 					rpl_nam_reply(fd, _args);
 					_args.erase(_args.begin() + 2, _args.end());
@@ -167,11 +181,13 @@ void	Command::names(int fd, const std::vector<std::string>& params)
 
 void	Command::pong(int fd, const std::vector<std::string>& params)
 {
+	int	size_p = params.size();
+	if (size_p > 1)
+		return;
 	std::string server_name = _data->get_srvname();
 	_data->set_user_last_pong(fd);
 	_data->set_user_was_ping(fd, false);
 	_args.push_back(server_name);
-	int	size_p = params.size();
 	if (size_p == 0)
 	{
 		err_noorigin(fd, _args);
@@ -189,13 +205,15 @@ void	Command::pong(int fd, const std::vector<std::string>& params)
 
 void	Command::privmsg(int fd, const std::vector<std::string>& params)
 {
+	int p_size = params.size();
+	if (p_size > 2)
+		return;
 	_args.push_back(_data->get_srvname());
 	if (!_data->is_registered(fd))
 	{
 		err_not_registered(fd, _args);
 		return;
 	}
-	int p_size = params.size();
 	if (p_size == 0)
 	{
 		_args.push_back("PRIVMSG");
@@ -237,10 +255,12 @@ void	Command::privmsg(int fd, const std::vector<std::string>& params)
 
 void	Command::notice(int fd, const std::vector<std::string>& params)
 {
+	int p_size = params.size();
+	if (p_size > 2)
+		return;
 	_args.push_back(_data->get_srvname());
 	if (_data->is_registered(fd))
 	{
-		int p_size = params.size();
 		if (p_size == 0)
 			return;
 		else if (p_size == 1)
@@ -394,6 +414,12 @@ void	Command::invite(int fd, const std::vector<std::string>& params)
 		err_not_registered(fd, _args);
 }
 
+// void	Command::who(int fd, const std::vector<std::string>& params)
+// {
+	
+// }
+
+
 /*---------------------------HELPER FUNCTIONS---------------------------------*/
 
 int		Command::parse_target(int fd, std::string &target)
@@ -417,7 +443,7 @@ int		Command::parse_target(int fd, std::string &target)
 		if (pos == std::string::npos)
 		{
 			_args.push_back(target);
-			if (target.at(0) == '#')
+			if (target.at(0) == '#' || target.at(0) == '&' || target.at(0) == '+' || target.at(0) == '!')
 			{
 				err_nosuch_channel(fd, _args);
 				return -1;
@@ -585,7 +611,7 @@ void	Command::send_to_chan(int fd, std::string &channel, std::string &message)
 {
 	std::cout << "nani" << std::endl;
 	_args.push_back(channel);
-	if (_data->check_user_flags(fd, RESTRICTED_UFLAG))
+	if (_data->is_banned(fd, channel))
 	{
 		std::cout << "nani2" << std::endl;
 		err_cannotsend_tochan(fd, _args);
