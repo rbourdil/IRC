@@ -99,7 +99,7 @@ void	Command::oper(int fd, const std::vector<std::string>& params)
 	{
 		std::string	hostname = _data->get_hostname(fd);
 		if (hostname != "localhost" && hostname != _data->get_srvname())
-			err_nooper_host(fd, _args);	
+			error_no_operhost(fd, _args);	
 		else
 		{
 			_data->set_user_flags(fd, OPER_UFLAG);
@@ -865,6 +865,7 @@ Command::Command(Data* data) : _data(data)
 	_cmd_map.insert(std::make_pair("PONG", &Command::pong));
 	_cmd_map.insert(std::make_pair("PRIVMSG", &Command::privmsg));
 	_cmd_map.insert(std::make_pair("MODE", &Command::mode_dispatch));
+	_cmd_map.insert(std::make_pair("OPER", &Command::mode_dispatch));
 	_cmd_map.insert(std::make_pair("QUIT", &Command::quit_dispatch));
 	_cmd_map.insert(std::make_pair("JOIN", &Command::join_dispatch));
 	_cmd_map.insert(std::make_pair("PART", &Command::part_dispatch));

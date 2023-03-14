@@ -380,9 +380,14 @@ class	Data {
 
 		// lookup
 
+		bool	comp_oper_name(const std::string& name)
+		{
+			return (name == _oper_name);
+		}
+
 		bool	comp_oper_passwd(const std::string& passwd)
 		{
-			return (passwd = _oper_passwd);
+			return (passwd == _oper_passwd);
 		}
 
 		bool	get_user_was_ping(int fd)

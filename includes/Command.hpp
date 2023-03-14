@@ -32,6 +32,7 @@ class	Command {
 		void	pass(int fd, const std::vector<std::string>& params);
 		void	nick(int fd, const std::vector<std::string>& params);
 		void	user(int fd, const std::vector<std::string>& params);
+		void	oper(int fd, const std::vector<std::string>& params);
 		void	user_mode(int fd, const std::vector<std::string>& params);
 
 		// channel commands
