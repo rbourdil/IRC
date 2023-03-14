@@ -83,6 +83,33 @@ void	Command::user(int fd, const std::vector<std::string>& params)
 	}
 }
 
+void	Command::oper(int fd, const std::vector<std::string>& params)
+{
+	_args.push_back(_data->get_srvname());
+	if (params.size() < 2)
+	{
+		_args.push_back("OPER");
+		err_need_moreparams(fd, _args);
+	}	
+	else if (!_data->comp_oper_name(params[0]) || !_data->comp_oper_passwd(params[1]))
+	{
+		err_passwd_mismatch(fd, _args);
+	}
+	else
+	{
+		std::string	hostname = _data->get_hostname(fd);
+		if (hostname != "localhost" && hostname != _data->get_srvname())
+			err_nooper_host(fd, _args);	
+		else
+		{
+			_data->set_user_flags(fd, OPER_UFLAG);
+			rpl_youreoper(fd, _args);
+			_args.push_back(user_mode_str(fd));
+			rpl_umodeis(fd, _args);
+		}
+	}
+}
+
 void	Command::user_mode(int fd, const std::vector<std::string>& params)
 {
 	_args.push_back(_data->get_srvname());
@@ -347,7 +374,6 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 		}
 		for (; itf != flags.end(); itf++)
 		{
-			std::cerr << "DEBUG " << *itv << std::endl;
 			switch (*itf) 
 			{
 				case 'o':

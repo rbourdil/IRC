@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include "../debug.hpp"
+
 Server::Server(int listener, Data *data) : _listener(listener), _data(data)
 {
 	_pfds.push_back(pollfd());
@@ -223,7 +225,8 @@ void	Server::run()
 					}
 					else
 					{
-						std::cerr << "[ MSG ] " << std::string(buff, buff + count) << std::endl;
+						std::string	msg = get_raw(std::string(buff, buff + count));
+						std::cerr << "[ MSG ] " << msg << std::endl;
 						ssize_t	i,j;
 
 						i = j = 0;

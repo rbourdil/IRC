@@ -93,7 +93,11 @@ class	Data {
 
 		const std::string	_srvname;
 		const std::string	_passwd;
-// used to lookup by nickname
+
+		const std::string	_oper_name;
+		const std::string	_oper_passwd;
+
+		// used to lookup by nickname
 		std::map<std::string, int>	_nick_to_fd;
 
 		// actual data
@@ -106,7 +110,7 @@ class	Data {
 	public:
 
 		// constructor
-		explicit Data(const std::string& srvname, const char* passwd) : _srvname(srvname), _passwd(passwd){ }
+		explicit Data(const std::string& srvname, const char* passwd) : _srvname(srvname), _passwd(passwd), _oper_name("operator"), _oper_passwd("operator") { }
 
 		// modifiers
 
@@ -375,7 +379,13 @@ class	Data {
 		}
 
 		// lookup
-		bool				get_user_was_ping(int fd)
+
+		bool	comp_oper_passwd(const std::string& passwd)
+		{
+			return (passwd = _oper_passwd);
+		}
+
+		bool	get_user_was_ping(int fd)
 		{
 			client_const_iterator	it = _clients.find(fd);
 			if (it != _clients.end())
