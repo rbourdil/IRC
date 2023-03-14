@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/14 15:59:33 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/14 16:12:19 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -689,7 +689,7 @@ void	Command::send_to_chan(int fd, std::string &channel, std::string &message)
 		}
 	}
 	std::cout << "nani5" << std::endl;
-	_args.erase(_args.begin() + 1, _args.end());
+	// _args.erase(_args.begin() + 1, _args.end());
 }	
 
 void	Command::send_to_nick(int fd, std::string &nick, std::string &message)
