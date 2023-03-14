@@ -6,7 +6,11 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/03 16:59:07 by pcamaren          #+#    #+#             */
+<<<<<<< HEAD
 /*   Updated: 2023/03/14 15:22:39 by rbourdil         ###   ########.fr       */
+=======
+/*   Updated: 2023/03/14 16:01:03 by pcamaren         ###   ########.fr       */
+>>>>>>> a422d52b6614c2a5605a2e4a0ef7ece0be9c5c55
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -400,7 +404,7 @@ void	error_caller(int reply_id, const std::set<int>& dest_fds, const std::vector
 void	err_unknown_command(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 421 ";
-	std::string err_message = prefix + args[1] + " :Unknown command\n";
+	std::string err_message = prefix + args[1] + " :Unknown command\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -408,7 +412,7 @@ void	err_unknown_command(int dest_fd, const std::vector<std::string> args)
 void	err_need_moreparams(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 461 ";
-	std::string err_message = prefix + args[1] + " :Not enough parameters\n";
+	std::string err_message = prefix + args[1] + " :Not enough parameters\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -416,7 +420,7 @@ void	err_need_moreparams(int dest_fd, const std::vector<std::string> args)
 void	err_already_registered(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 462 ";
-	std::string err_message = prefix + " :Unauthorized command (already registered)\n";
+	std::string err_message = prefix + " :Unauthorized command (already registered)\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 
@@ -424,7 +428,7 @@ void	err_already_registered(int dest_fd, const std::vector<std::string> args)
 void	err_not_registered(int dest_fd, const std::vector<std::string> args)
 {
 		std::string	prefix = ":" + args[0] + " 451 ";
-		std::string err_message = prefix + ":You have not registered\n";
+		std::string err_message = prefix + ":You have not registered\r\n";
 		send(dest_fd, err_message.c_str(), err_message.size(), 0);		
 }
 
@@ -432,7 +436,7 @@ void	err_not_registered(int dest_fd, const std::vector<std::string> args)
 void	err_no_nicknamegive(int dest_fd, const std::vector<std::string> args)
 {
 		std::string	prefix = ":" + args[0] + " 431 ";
-		std::string err_message = prefix + ":No nickname given\n";
+		std::string err_message = prefix + ":No nickname given\r\n";
 		send(dest_fd, err_message.c_str(), err_message.size(), 0);		
 }
 
@@ -440,245 +444,245 @@ void	err_no_nicknamegive(int dest_fd, const std::vector<std::string> args)
 void	err_erroneus_nickname(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 432 ";
-	std::string err_message = prefix + args[1] + " :Erroneus nickname\n";
+	std::string err_message = prefix + args[1] + " :Erroneus nickname\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 // 433
 void	err_nickname_inuse(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 433 ";
-	std::string err_message = prefix + ":Nickname is already in use\n";
+	std::string err_message = prefix + ":Nickname is already in use\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 // 484
 void	err_restricted(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 484 ";
-	std::string err_message = prefix + ":Your connection is restricted!\n";
+	std::string err_message = prefix + ":Your connection is restricted!\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 // 464
 void	err_passwd_mismatch(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 464 ";
-	std::string err_message = prefix + ":Password incorrect\n";
+	std::string err_message = prefix + ":Password incorrect\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);		
 }
 // 501
 void	err_umode_unknownflag(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 501";
-	std::string err_message = prefix + ":Unknown MODE flag\n";
+	std::string err_message = prefix + ":Unknown MODE flag\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 // 502
 void	err_users_dontmatch(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 502 ";
-	std::string err_message = prefix + ":Cannot change mode for other users\n";
+	std::string err_message = prefix + ":Cannot change mode for other users\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 // 473
 void	err_invite_onlychan(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 473 ";
-	std::string err_message = prefix + args[1] + " :Cannot join channel (+i)\n";
+	std::string err_message = prefix + args[1] + " :Cannot join channel (+i)\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 // 471
 void	err_channel_isfull(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 471 ";
-	std::string err_message = prefix + args[1] + " :Cannot join channel (+l)\n";
+	std::string err_message = prefix + args[1] + " :Cannot join channel (+l)\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 // 403
 void	err_nosuch_channel(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 403 ";
-	std::string err_message = prefix + args[1] + " :No such channel\n";
+	std::string err_message = prefix + args[1] + " :No such channel\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 // 407
 void	err_toomany_targets(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 407 ";
-	std::string err_message = prefix + args[1] + " :407 recipients. " + args[2] + "\n";
+	std::string err_message = prefix + args[1] + " :407 recipients. " + args[2] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 // 474
 void	err_banned_fromchan(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 474 ";
-	std::string err_message = prefix + args[1] + " :Cannot join channel (+b)\n";
+	std::string err_message = prefix + args[1] + " :Cannot join channel (+b)\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 // 475
 void	err_badchannel_key(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 475 ";
-	std::string err_message = prefix + args[1] + " :Cannot join channel (+k)\n";
+	std::string err_message = prefix + args[1] + " :Cannot join channel (+k)\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //476
 void	err_bad_chanmask(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 476 ";
-	std::string err_message = prefix + args[1] + " :Bad Channel Mask\n";
+	std::string err_message = prefix + args[1] + " :Bad Channel Mask\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //405
 void	err_toomany_channels(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 405 ";
-	std::string err_message = prefix + args[1] + " :You have joined too many channels\n";
+	std::string err_message = prefix + args[1] + " :You have joined too many channels\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //437
 void	err_unavail_resource(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 437 ";
-	std::string err_message = prefix + args[1] + " :Nick/channel is temporarily unavailable\n";
+	std::string err_message = prefix + args[1] + " :Nick/channel is temporarily unavailable\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //442
 void	err_noton_channel(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 442 ";
-	std::string err_message = prefix + args[1] + " :You're not on that channel\n";
+	std::string err_message = prefix + args[1] + " :You're not on that channel\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //477
 void	err_nochan_modes(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 477 ";
-	std::string err_message = prefix + args[1] + " :Channel doesn't support modes\n";
+	std::string err_message = prefix + args[1] + " :Channel doesn't support modes\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //441
 void	err_usernot_inchannel(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 441 ";
-	std::string err_message = prefix + args[1] + " " + args[2] + " :They aren't on that channel\n";
+	std::string err_message = prefix + args[1] + " " + args[2] + " :They aren't on that channel\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //467
 void	err_keyset(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 467 ";
-	std::string err_message = prefix + args[1] + " :Channel key already set\n";
+	std::string err_message = prefix + args[1] + " :Channel key already set\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //482
 void	err_chano_privsneeded(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 482 ";
-	std::string err_message = prefix + args[1] + " :You're not channel operator\n";
+	std::string err_message = prefix + args[1] + " :You're not channel operator\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //472
 void	err_unknown_mode(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 472 ";
-	std::string err_message = prefix + args[1] + " :is unknown mode char to me for " + args[2] + "\n";
+	std::string err_message = prefix + args[1] + " :is unknown mode char to me for " + args[2] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //402
 void	err_nosuch_server(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 402 ";
-	std::string err_message = prefix + args[0] + " :No such server\n";
+	std::string err_message = prefix + args[0] + " :No such server\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //401
 void	err_nosuch_nick(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 401 ";
-	std::string err_message = prefix + args[1] + " :No such nick/channel\n";
+	std::string err_message = prefix + args[1] + " :No such nick\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //443
 void	err_user_on_channel(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 443 ";
-	std::string err_message = prefix + args[1] + " " + args[2] + " :is already on channel\n";
+	std::string err_message = prefix + args[1] + " " + args[2] + " :is already on channel\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //411
 void	err_norecipient(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 411 ";
-	std::string err_message = prefix + ":No recipient given (" + args[1] + ")\n";
+	std::string err_message = prefix + ":No recipient given (" + args[1] + ")\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //404
 void	err_cannotsend_tochan(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 404 ";
-	std::string err_message = prefix + args[1] + " :Cannot send to channel\n";
+	std::string err_message = prefix + args[1] + " :Cannot send to channel\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //414
 void	err_wildto_plevel(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + "  ";
-	std::string err_message = prefix + args[1] + " :Wildcard in toplevel domain\n";
+	std::string err_message = prefix + args[1] + " :Wildcard in toplevel domain\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //412
 void	err_notext_tosend(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 412 ";
-	std::string err_message = prefix + ":No text to send\n";
+	std::string err_message = prefix + ":No text to send\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //413
 void	err_noto_plevel(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 413 ";
-	std::string err_message = prefix + args[1] + " :No toplevel domain specified\n";
+	std::string err_message = prefix + args[1] + " :No toplevel domain specified\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //406
 void	err_wasno_suchnick(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 406 ";
-	std::string err_message = prefix + args[1] + " :There was no such nickname\n";
+	std::string err_message = prefix + args[1] + " :There was no such nickname\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //481
 void	err_noprivileges(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 481 ";
-	std::string err_message = prefix + ":Permission Denied- You're not an IRC operator\n";
+	std::string err_message = prefix + ":Permission Denied- You're not an IRC operator\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //483
 void	err_cant_killserver(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 483 ";
-	std::string err_message = prefix + ":You can't kill a server!\n";
+	std::string err_message = prefix + ":You can't kill a server!\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //409
 void	err_noorigin(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 409 ";
-	std::string err_message = prefix + " :No origin specified\n";
+	std::string err_message = prefix + " :No origin specified\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //446
 void	err_users_disabled(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 406 ";
-	std::string err_message = prefix + " :USERS has been disabled\n";
+	std::string err_message = prefix + " :USERS has been disabled\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //424
 void	err_filerror(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 424 ";
-	std::string err_message = prefix + " :File error doing " + args[2] + "on" + args[3] + "\n";
+	std::string err_message = prefix + " :File error doing " + args[2] + "on" + args[3] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 //replies
@@ -687,7 +691,7 @@ void	err_filerror(int dest_fd, const std::vector<std::string> args)
 void	rpl_welcome_message(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 001  ";
-	std::string err_message = prefix + ":Welcome to the Internet Relay Network " + args[1] + "\n";
+	std::string err_message = prefix + ":Welcome to the Internet Relay Network " + args[1] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -695,21 +699,21 @@ void	rpl_welcome_message(int dest_fd, const std::vector<std::string> args)
 void	rpl_youreoper(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 381 ";
-	std::string err_message = prefix + ":You are now an IRC operator\n";
+	std::string err_message = prefix + ":You are now an IRC operator\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 // 221
 void	rpl_umodeis(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 221 ";
-	std::string err_message = prefix + args[1] + "\n";
+	std::string err_message = prefix + args[1] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 // 332
 void	rpl_topic(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 332 ";
-	std::string err_message = prefix + args[1] + " :" + args[2] + "\n";
+	std::string err_message = prefix + args[1] + " :" + args[2] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -717,7 +721,7 @@ void	rpl_topic(int dest_fd, const std::vector<std::string> args)
 void	rpl_ban_list(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 376 ";
-	std::string err_message = prefix + args[1] + " " + args[2] + "\n";
+	std::string err_message = prefix + args[1] + " " + args[2] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 
@@ -725,7 +729,7 @@ void	rpl_ban_list(int dest_fd, const std::vector<std::string> args)
 void	rpl_except_list(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 348 ";
-	std::string err_message = prefix + args[1] + " " + args[2] + "\n";
+	std::string err_message = prefix + args[1] + " " + args[2] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 
@@ -733,7 +737,7 @@ void	rpl_except_list(int dest_fd, const std::vector<std::string> args)
 void	rpl_channel_modeis(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 324 ";
-	std::string err_message = prefix + args[1] + " " + args[2] +"\n";
+	std::string err_message = prefix + args[1] + " " + args[2] +"\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);		
 }
 
@@ -741,7 +745,7 @@ void	rpl_channel_modeis(int dest_fd, const std::vector<std::string> args)
 void	rpl_invite_list(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 346 ";
-	std::string err_message = prefix + args[1] + " " + args[2] + "\n";
+	std::string err_message = prefix + args[1] + " " + args[2] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);		
 }
 
@@ -749,7 +753,7 @@ void	rpl_invite_list(int dest_fd, const std::vector<std::string> args)
 void	rpl_uniqops(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 325 ";
-	std::string err_message = prefix + args[1] + " " + args[2] + "\n";
+	std::string err_message = prefix + args[1] + " " + args[2] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);	
 }
 
@@ -757,7 +761,7 @@ void	rpl_uniqops(int dest_fd, const std::vector<std::string> args)
 void	rpl_endof_banlist(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 368 ";
-	std::string err_message = prefix + args[1] + " :End of channel ban list\n";
+	std::string err_message = prefix + args[1] + " :End of channel ban list\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);		
 }
 
@@ -765,7 +769,7 @@ void	rpl_endof_banlist(int dest_fd, const std::vector<std::string> args)
 void	rpl_endof_exceptlist(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 349 ";
-	std::string err_message = prefix + args[1] + " :End of channel exception list\n";
+	std::string err_message = prefix + args[1] + " :End of channel exception list\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);			
 }
 
@@ -773,7 +777,7 @@ void	rpl_endof_exceptlist(int dest_fd, const std::vector<std::string> args)
 void	rpl_endof_invitelist(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 347 ";
-	std::string err_message = prefix + args[1] + " :End of channel invite list\n";
+	std::string err_message = prefix + args[1] + " :End of channel invite list\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);		
 }
 
@@ -781,7 +785,7 @@ void	rpl_endof_invitelist(int dest_fd, const std::vector<std::string> args)
 void	rpl_notopic(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 331 ";
-	std::string err_message = prefix + args[1] + " :No topic is set\n";
+	std::string err_message = prefix + args[1] + " :No topic is set\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);		
 }
 
@@ -796,7 +800,7 @@ void	rpl_nam_reply(int dest_fd, const std::vector<std::string> args)
 		for (size_t i = 3; i < args.size(); i++)
 			err_message = err_message + " " + args[i];
 	}
-	err_message = err_message +" \n";
+	err_message = err_message +" \r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -804,7 +808,7 @@ void	rpl_nam_reply(int dest_fd, const std::vector<std::string> args)
 void	rpl_endof_names(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 366 ";
-	std::string err_message = prefix + args[1] + " :End of NAMES list\n";
+	std::string err_message = prefix + args[1] + " :End of NAMES list\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -812,7 +816,7 @@ void	rpl_endof_names(int dest_fd, const std::vector<std::string> args)
 void	rpl_list(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 322 ";
-	std::string err_message = prefix + args[1] + " " + args[2] + " :" + args[3] + "\n";
+	std::string err_message = prefix + args[1] + " " + args[2] + " :" + args[3] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);		
 }
 
@@ -820,7 +824,7 @@ void	rpl_list(int dest_fd, const std::vector<std::string> args)
 void	rpl_listend(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 323 ";
-	std::string err_message = prefix + ":End of LIST\n";
+	std::string err_message = prefix + ":End of LIST\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);			
 }
 
@@ -828,7 +832,7 @@ void	rpl_listend(int dest_fd, const std::vector<std::string> args)
 void	rpl_inviting(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 341 ";
-	std::string err_message = prefix + args[1] + " " + args[2] + "\n";
+	std::string err_message = prefix + args[1] + " " + args[2] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);		
 }
 
@@ -836,7 +840,7 @@ void	rpl_inviting(int dest_fd, const std::vector<std::string> args)
 void	rpl_away(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 301 ";
-	std::string err_message = prefix + args[1] + " :" + args[2] + "\n";
+	std::string err_message = prefix + args[1] + " :" + args[2] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);				
 }
 
@@ -845,7 +849,7 @@ void	rpl_whoreply(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 352 ";
 	std::string err_message = prefix + args[1] + " " + args[2] + " " + args[3] + " " + args[0] + " " + args[5];
-	err_message = err_message + "H@+: " + args[6] +  " " + args[7] + "\n";
+	err_message = err_message + "H@+: " + args[6] +  " " + args[7] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -853,7 +857,7 @@ void	rpl_whoreply(int dest_fd, const std::vector<std::string> args)
 void	rpl_endof_who(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 315 ";
-	std::string err_message = prefix + args[1] + " :End of WHO list\n";
+	std::string err_message = prefix + args[1] + " :End of WHO list\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -861,7 +865,7 @@ void	rpl_endof_who(int dest_fd, const std::vector<std::string> args)
 void	rpl_whois_user(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 311 ";
-	std::string err_message = prefix + args[1] + args[2] + args[3] + args[4] + " * :" + args[5] + "\n";
+	std::string err_message = prefix + args[1] + args[2] + args[3] + args[4] + " * :" + args[5] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -876,7 +880,7 @@ void	rpl_whois_channel(int dest_fd, const std::vector<std::string> args)
 		for (size_t i = 3; i < args.size() ; i++)
 			err_message = err_message + args[1];
 	}
-	err_message = err_message + "\n";
+	err_message = err_message + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -884,7 +888,7 @@ void	rpl_whois_channel(int dest_fd, const std::vector<std::string> args)
 void	rpl_whois_idle(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 317 ";
-	std::string err_message = prefix + args[1] + " " + args[2] + " :seconds idle\n";
+	std::string err_message = prefix + args[1] + " " + args[2] + " :seconds idle\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -892,7 +896,7 @@ void	rpl_whois_idle(int dest_fd, const std::vector<std::string> args)
 void	rpl_endof_whois(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 312 ";
-	std::string err_message = prefix + args[1] + " :End of WHOIS list\n";
+	std::string err_message = prefix + args[1] + " :End of WHOIS list\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -900,7 +904,7 @@ void	rpl_endof_whois(int dest_fd, const std::vector<std::string> args)
 void	rpl_whois_server(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 312 ";
-	std::string err_message = prefix + args[1] + " " + args[0] + " :" + args[2] + "\n";
+	std::string err_message = prefix + args[1] + " " + args[0] + " :" + args[2] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -908,7 +912,7 @@ void	rpl_whois_server(int dest_fd, const std::vector<std::string> args)
 void	rpl_whois_operator(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 313 ";
-	std::string err_message = prefix + args[1] + " :is an IRC operator\n";
+	std::string err_message = prefix + args[1] + " :is an IRC operator\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -916,7 +920,7 @@ void	rpl_whois_operator(int dest_fd, const std::vector<std::string> args)
 void	rpl_whowas_user(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 314 ";
-	std::string err_message = prefix + args[1] + " " + args[2] + " " + args[3] + "* :" + args[4] +"\n";
+	std::string err_message = prefix + args[1] + " " + args[2] + " " + args[3] + "* :" + args[4] +"\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -924,7 +928,7 @@ void	rpl_whowas_user(int dest_fd, const std::vector<std::string> args)
 void	rpl_endof_whowas(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 369 ";
-	std::string err_message = prefix + args[1] + " :End of WHOWAS\n";
+	std::string err_message = prefix + args[1] + " :End of WHOWAS\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -932,7 +936,7 @@ void	rpl_endof_whowas(int dest_fd, const std::vector<std::string> args)
 void	rpl_users_start(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 392 ";
-	std::string err_message = prefix + ":UserID   Terminal  Host\n";
+	std::string err_message = prefix + ":UserID   Terminal  Host\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -940,7 +944,7 @@ void	rpl_users_start(int dest_fd, const std::vector<std::string> args)
 void	rpl_nousers(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 395 ";
-	std::string err_message = prefix + ":Nobody logged in\n";
+	std::string err_message = prefix + ":Nobody logged in\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -948,7 +952,7 @@ void	rpl_nousers(int dest_fd, const std::vector<std::string> args)
 void	rpl_users(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 393 ";
-	std::string err_message = prefix + ":" + args[1] + " " + args[2] + " " + args[5] + "\n";
+	std::string err_message = prefix + ":" + args[1] + " " + args[2] + " " + args[5] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -956,7 +960,7 @@ void	rpl_users(int dest_fd, const std::vector<std::string> args)
 void	rpl_endof_users(int dest_fd, const std::vector<std::string> args)
 {
 	std::string	prefix = ":" + args[0] + " 394 ";
-	std::string err_message = prefix + ":End of users\n";
+	std::string err_message = prefix + ":End of users\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -965,14 +969,14 @@ void	rpl_endof_users(int dest_fd, const std::vector<std::string> args)
 void	join_reply(int dest_fd, const std::vector<std::string>& args)
 {
 	std::string	prefix = ":" + args[0];
-	std::string	err_message = prefix + " JOIN " + args[1] + "\n";
+	std::string	err_message = prefix + " JOIN " + args[1] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
 void	part_reply(int dest_fd, const std::vector<std::string>& args)
 {
 	std::string	prefix = ":" + args[0];
-	std::string	err_message = prefix + " PART " + args[1] + " :" + args[2] + "\n";
+	std::string	err_message = prefix + " PART " + args[1] + " :" + args[2] + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -994,6 +998,7 @@ void	error_quit(int dest_fd, const std::vector<std::string>& args)
 		std::string	suffix = " (QUIT: " + args[2] + ")";
 		err_message += suffix;
 	}
+	err_message = err_message + "\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
@@ -1001,20 +1006,20 @@ void	error_quit(int dest_fd, const std::vector<std::string>& args)
 void	error_user(int dest_fd, const std::vector<std::string>& args)
 {
 	std::string	prefix = ":" + args[0];
-	std::string	err_message = prefix + " " + args[1] + " ERROR: user does not exist\n";
+	std::string	err_message = prefix + " " + args[1] + " ERROR: user does not exist\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
 void	error_host(int dest_fd, const std::vector<std::string>& args)
 {
 	std::string	prefix = ":" + args[0];
-	std::string	err_message = prefix + " " + args[1] + " ERROR: invalid hostname/hostaddress\n";
+	std::string	err_message = prefix + " " + args[1] + " ERROR: invalid hostname/hostaddress\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
 void	error_host_notmatch(int dest_fd, const std::vector<std::string>& args)
 {
 	std::string	prefix = ":" + args[0];
-	std::string	err_message = prefix + " " + args[1] + " ERROR: user does not have such hostname/hostaddress\n";
+	std::string	err_message = prefix + " " + args[1] + " ERROR: user does not have such hostname/hostaddress\r\n";
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }

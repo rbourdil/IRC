@@ -45,6 +45,7 @@ class	Command {
 		void	list(int fd, const std::vector<std::string>& params);
 		void	notice(int fd, const std::vector<std::string>& params);
 		void	kick(int fd, const std::string& channel, const std::string& user, const std::string& comment);
+		void	invite(int fd, const std::vector<std::string>& params);
 
 		// helper functions
 		void	quit_dispatch(int fd, const std::vector<std::string>& params);
