@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/13 22:50:21 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/14 15:59:33 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -187,6 +187,214 @@ void	Command::pong(int fd, const std::vector<std::string>& params)
 	}
 }
 
+void	Command::privmsg(int fd, const std::vector<std::string>& params)
+{
+	_args.push_back(_data->get_srvname());
+	if (!_data->is_registered(fd))
+	{
+		err_not_registered(fd, _args);
+		return;
+	}
+	int p_size = params.size();
+	if (p_size == 0)
+	{
+		_args.push_back("PRIVMSG");
+		err_notext_tosend(fd, _args);
+		err_norecipient(fd, _args);
+	}
+	else if (p_size == 1)
+		err_notext_tosend(fd, _args);
+	else
+	{
+		std::vector<std::string> target = parse_list(params[0]);
+		std::string message = params[1];
+		std::vector<std::string>::iterator target_iter = target.begin();
+		std::cout << "first element of vector: " << *target_iter << std::endl;
+		int ret_fd;
+		while (target_iter != target.end())
+		{
+			ret_fd = parse_target(fd, *target_iter);
+			if (ret_fd != -1)
+			{
+				if (ret_fd == -5)
+					send_to_chan(fd, *target_iter, message);
+				else if (ret_fd == -6)
+					send_to_nick(fd, *target_iter, message);
+				else
+				{
+					std::string sender_nick = _data->get_nickname(fd);
+					message = sender_nick + ": " + message + "\n";
+					send(ret_fd, message.c_str(), message.size(), 0);
+				}
+				++target_iter;
+			}
+			else
+				++target_iter;
+			_args.erase(_args.begin() + 1, _args.end());
+		}
+	}
+}
+
+void	Command::notice(int fd, const std::vector<std::string>& params)
+{
+	_args.push_back(_data->get_srvname());
+	if (_data->is_registered(fd))
+	{
+		int p_size = params.size();
+		if (p_size == 0)
+			return;
+		else if (p_size == 1)
+			return;
+		else
+		{
+			std::vector<std::string> target = parse_list(params[0]);
+			std::string message = params[1];
+			std::vector<std::string>::iterator target_iter = target.begin();
+			int ret_fd;
+			while (target_iter != target.end())
+			{
+				ret_fd = parse_target_notice(*target_iter);
+				if (ret_fd != -1)
+				{
+					if (ret_fd == -5)
+						send_to_chan(fd, *target_iter, message);
+					else if (ret_fd == -6)
+						send_to_nick(fd, *target_iter, message);
+					else
+					{
+						std::string sender_nick = _data->get_nickname(fd);
+						message = sender_nick + ": " + message + "\n";
+						send(ret_fd, message.c_str(), message.size(), 0);
+					}
+					++target_iter;
+				}
+				else
+					++target_iter;
+			}
+		}
+	}
+	else
+		err_not_registered(fd, _args);
+}
+
+void	Command::invite(int fd, const std::vector<std::string>& params)
+{
+	_args.push_back(_data->get_srvname());
+	if (_data->is_registered(fd))
+	{
+		int size_p = params.size();
+		if (size_p < 2)
+		{
+			_args.push_back("INVITE");
+			err_need_moreparams(fd, _args);
+			return;
+		}
+		if (size_p == 2)
+		{
+			std::string nickname = params[0];
+			std::string channel = params[1];
+			if (_data->nickname_exists(nickname))
+			{
+				if (_data->channel_exists(channel))
+				{
+					if (_data->is_in_channel(_data->get_nickname(fd), channel))
+					{
+						if (_data->check_channel_flags(channel, INVITE_ONLY_CFLAG))
+						{
+							if (_data->check_member_status(channel, fd, OPER_MFLAG))
+							{
+								if (_data->is_in_channel(nickname, channel))
+								{
+									_args.push_back(nickname);
+									_args.push_back(channel);
+									err_user_on_channel(fd, _args);
+									return;
+								}
+								else
+								{
+									int	dest_fd = _data->get_user_fd(nickname);
+									if (_data->check_user_flags(dest_fd, AWAY_UFLAG))
+									{
+										_args.push_back(nickname);
+										_args.push_back("user is away");
+										rpl_away(fd, _args);
+										return;
+									}
+									else
+									{
+										_args.push_back(channel);
+										_args.push_back(nickname);
+										rpl_inviting(fd, _args);
+										std::string message = _data->get_user_info(fd) + " INVITE " + nickname + " " + channel + "\r\n";
+										send(dest_fd, message.c_str(), message.size(), 0);
+									}
+								}
+							}
+							else
+							{
+								_args.push_back(channel);
+								err_chano_privsneeded(fd, _args);
+							}
+						}
+						else
+						{
+							if (_data->is_in_channel(nickname, channel))
+							{
+								_args.push_back(nickname);
+								_args.push_back(channel);
+								err_user_on_channel(fd, _args);
+								return;
+							}
+							else
+							{
+								int	dest_fd = _data->get_user_fd(nickname);
+								if (_data->check_user_flags(dest_fd, AWAY_UFLAG))
+								{
+									_args.push_back(nickname);
+									_args.push_back("user is away");
+									rpl_away(fd, _args);
+									return;
+								}
+								else
+								{
+									_args.push_back(channel);
+									_args.push_back(nickname);
+									rpl_inviting(fd, _args);
+									std::string message = ":" + _data->get_user_info(fd) + " INVITE " + nickname + " #" + channel + "\r\n";
+									send(dest_fd, message.c_str(), message.size(), 0);
+								}
+							}
+						}
+					}
+					else
+					{
+						_args.push_back(channel);
+						err_noton_channel(fd, _args);
+						return ;
+					}
+				}
+				else
+				{
+					_args.push_back(channel);
+					err_nosuch_channel(fd, _args);
+					return;
+				}
+			}
+			else
+			{
+				_args.push_back(nickname);
+				err_nosuch_nick(fd, _args);
+				return;
+			}
+			
+		}
+		
+	}
+	else
+		err_not_registered(fd, _args);
+}
+
+/*---------------------------HELPER FUNCTIONS---------------------------------*/
 
 int		Command::parse_target(int fd, std::string &target)
 {
@@ -373,89 +581,6 @@ int		Command::parse_target(int fd, std::string &target)
 	return -1;
 }
 
-void	Command::privmsg(int fd, const std::vector<std::string>& params)
-{
-	_args.push_back(_data->get_srvname());
-	int p_size = params.size();
-	if (p_size == 0)
-	{
-		_args.push_back("PRIVMSG");
-		err_notext_tosend(fd, _args);
-		err_norecipient(fd, _args);
-	}
-	else if (p_size == 1)
-		err_notext_tosend(fd, _args);
-	else
-	{
-		std::vector<std::string> target = parse_list(params[0]);
-		std::string message = params[1];
-		std::vector<std::string>::iterator target_iter = target.begin();
-		std::cout << "first element of vector: " << *target_iter << std::endl;
-		int ret_fd;
-		while (target_iter != target.end())
-		{
-			ret_fd = parse_target(fd, *target_iter);
-			if (ret_fd != -1)
-			{
-				if (ret_fd == -5)
-					send_to_chan(fd, *target_iter, message);
-				else if (ret_fd == -6)
-					send_to_nick(fd, *target_iter, message);
-				else
-				{
-					std::string sender_nick = _data->get_nickname(fd);
-					message = sender_nick + ": " + message + "\n";
-					send(ret_fd, message.c_str(), message.size(), 0);
-				}
-				++target_iter;
-			}
-			else
-				++target_iter;
-			_args.erase(_args.begin() + 1, _args.end());
-		}
-	}
-}
-
-void	Command::notice(int fd, const std::vector<std::string>& params)
-{
-	int p_size = params.size();
-	if (p_size == 0)
-		return;
-	else if (p_size == 1)
-		return;
-	else
-	{
-		std::vector<std::string> target = parse_list(params[0]);
-		std::string message = params[1];
-		std::vector<std::string>::iterator target_iter = target.begin();
-		// std::cout << "first element of vector: " << *target_iter << std::endl;
-		// int dest_fd = parse_target_notice(*target_iter);
-		// std::cout << "dest_fd: " << dest_fd << std::endl;
-		int ret_fd;
-		while (target_iter != target.end())
-		{
-			ret_fd = parse_target_notice(*target_iter);
-			if (ret_fd != -1)
-			{
-				if (ret_fd == -5)
-					send_to_chan(fd, *target_iter, message);
-				else if (ret_fd == -6)
-					send_to_nick(fd, *target_iter, message);
-				else
-				{
-					std::string sender_nick = _data->get_nickname(fd);
-					message = sender_nick + ": " + message + "\n";
-					send(ret_fd, message.c_str(), message.size(), 0);
-				}
-				++target_iter;
-			}
-			else
-				++target_iter;
-		}
-	}
-}
-
-/*---------------------------HELPER FUNCTIONS---------------------------------*/
 void	Command::send_to_chan(int fd, std::string &channel, std::string &message)
 {
 	std::cout << "nani" << std::endl;
@@ -604,7 +729,6 @@ bool	Command::is_valid_host(std::string &host)
 		return true;
 }
 
-
 int		Command::parse_target_notice(std::string &target)
 {
 	if (_data->channel_exists(target))
@@ -739,7 +863,6 @@ int		Command::parse_target_notice(std::string &target)
 	std::cout << "extra return" << std::endl;
 	return -1;
 }
-
 
 void	Command::send_to_chan_notice(int fd, std::string &channel, std::string &message)
 {

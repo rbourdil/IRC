@@ -44,6 +44,7 @@ class	Command {
 		void	privmsg(int fd, const std::vector<std::string>& params);
 		void	list(int fd, const std::vector<std::string>& params);
 		void	notice(int fd, const std::vector<std::string>& params);
+		void	invite(int fd, const std::vector<std::string>& params);
 
 		// helper functions
 		void	quit_dispatch(int fd, const std::vector<std::string>& params);

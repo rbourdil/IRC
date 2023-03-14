@@ -741,6 +741,7 @@ Command::Command(Data* data) : _data(data)
 	_cmd_map.insert(std::make_pair("PART", &Command::part_dispatch));
 	_cmd_map.insert(std::make_pair("LIST", &Command::list));
 	_cmd_map.insert(std::make_pair("NOTICE", &Command::notice));
+	_cmd_map.insert(std::make_pair("INVITE", &Command::invite));
 }
 
 void	Command::execute_cmd(int fd, const irc_cmd& cmd)
