@@ -569,8 +569,91 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 	}
 }
 		
+void	Command::list(int fd, const std::vector<std::string>& params)
+{
+	_args.push_back(_data->get_srvname());
+	std::vector<std::string>	channels;
+	if (!_data->is_registered(fd))
+	{
+		err_not_registered(fd, _args);
+	}
+	else
+	{
+		if (params.size() < 1)
+			channels = _data->list_visible_channels(fd);
+		else
+			channels = parse_list(params[0]);
+		std::vector<std::string>::const_iterator	it = channels.begin();
+		for (; it != channels.end(); it++)
+		{
+			if (_data->channel_is_visible(*it))
+			{
+				_args.push_back(*it);
+				int	count = _data->channel_visible_members_count(*it);	
+				std::stringstream	ss;
+				ss << count;
+				_args.push_back(ss.str());
+				_args.push_back(_data->get_channel_topic(*it));
+				rpl_list(fd, _args);
+				_args.erase(_args.begin() + 1, _args.end());
+			}
+		}
+		rpl_listend(fd, _args);
+	}
+}
 
-	
+void	Command::kick(int fd, const std::string& channel, const std::string& user, const std::string& comment)
+{
+	if (!valid_channel(channel))
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back(channel);
+		err_bad_chanmask(fd, _args);
+	}
+	else if (!_data->channel_exists(channel))
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back(channel);
+		err_nosuch_channel(fd, _args);
+	}
+	else if (!_data->is_in_channel(fd, channel))
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back(channel);
+		err_noton_channel(fd, _args);	
+	}
+	else if (!_data->check_member_status(channel, fd, OPER_MFLAG))
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back(channel);
+		err_chano_privsneeded(fd, _args);
+	}
+	else if (!_data->nickname_exists(user) || !_data->is_in_channel(user, channel))
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back(user);
+		_args.push_back(channel);
+		err_usernot_inchannel(fd, _args);
+	}
+	else
+	{
+		_args.push_back(_data->get_user_info(fd));
+		_args.push_back(channel);
+		_args.push_back(user);
+		if (comment.empty())
+			_args.push_back(_data->get_nickname(fd));
+		else
+			_args.push_back(comment);
+		std::vector<int>	members = _data->get_members_list_fd(channel);
+		for (std::vector<int>::iterator it = members.begin(); it != members.end(); ++it)
+			kick_reply(*it, _args);
+		_data->remove_channel_from_user(_data->get_user_fd(user), channel);
+		_data->remove_user_from_channel(_data->get_user_fd(user), channel);
+	}
+}
+		
+
+
 // helper functions
 
 void	Command::quit_dispatch(int fd, const std::vector<std::string>& params)
@@ -666,36 +749,56 @@ void	Command::mode_dispatch(int fd, const std::vector<std::string>& params)
 		channel_mode(fd, params);
 }
 
-void	Command::list(int fd, const std::vector<std::string>& params)
+void	Command::kick_dispatch(int fd, const std::vector<std::string>& params)
 {
-	_args.push_back(_data->get_srvname());
-	std::vector<std::string>	channels;
+	std::cerr << "BEGIN KICK DISPATCH" << std::endl;
 	if (!_data->is_registered(fd))
 	{
+		_args.push_back(_data->get_srvname());
 		err_not_registered(fd, _args);
 	}
-	else if (params.size() < 1)
-		channels = _data->list_visible_channels(fd);
-	else
-		channels = parse_list(params[1]);
-	std::vector<std::string>::const_iterator	it = channels.begin();
-	for (; it != channels.end(); it++)
+	else if (params.size() < 2)
 	{
-		if (_data->channel_is_visible(*it))
+		_args.push_back(_data->get_srvname());
+		_args.push_back("KICK");
+		err_need_moreparams(fd, _args);
+	}
+	else
+	{
+		std::cerr << "VALID" << std::endl;
+		std::vector<std::string>	channels = parse_list(params[0]);
+		std::vector<std::string>	users = parse_list(params[1]);
+		std::string					comment;
+		if (params.size() > 2)
+			comment = params[2];
+		std::vector<std::string>::const_iterator	itchan = channels.begin();
+		std::vector<std::string>::const_iterator	ituser = users.begin();
+
+		if (channels.size() == 1 && users.size() >= 1)
 		{
-			_args.push_back(*it);
-			int	count = _data->channel_visible_members_count(*it);	
-			std::stringstream	ss;
-			ss << count;
-			_args.push_back(ss.str());
-			_args.push_back(_data->get_channel_topic(*it));
-			rpl_list(fd, _args);
-			_args.erase(_args.begin() + 1, _args.end());
+			for (; ituser != users.end(); ++ituser)
+			{
+				kick(fd, *itchan, *ituser, comment);
+				_args.clear();
+			}
+		}
+		else if (channels.size() > 1 && channels.size() == users.size())
+		{
+			for (; itchan != channels.end(); ++itchan, ++ituser)
+			{
+				kick(fd, *itchan, *ituser, comment);
+				_args.clear();
+			}
+		}
+		else
+		{
+			_args.push_back(_data->get_srvname());
+			_args.push_back("KICK");
+			err_need_moreparams(fd, _args);
 		}
 	}
-	rpl_listend(fd, _args);
+	std::cerr << "OUT" << std::endl;
 }
-
 
 std::string	Command::user_mode_str(int fd)
 {
@@ -741,6 +844,7 @@ Command::Command(Data* data) : _data(data)
 	_cmd_map.insert(std::make_pair("PART", &Command::part_dispatch));
 	_cmd_map.insert(std::make_pair("LIST", &Command::list));
 	_cmd_map.insert(std::make_pair("NOTICE", &Command::notice));
+	_cmd_map.insert(std::make_pair("KICK", &Command::kick_dispatch));
 	_cmd_map.insert(std::make_pair("INVITE", &Command::invite));
 	_cmd_map.insert(std::make_pair("CAP", &Command::cap));
 	// _cmd_map.insert(std::make_pair("WHO", &Command::who));

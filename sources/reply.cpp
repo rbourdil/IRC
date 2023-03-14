@@ -6,7 +6,11 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/03 16:59:07 by pcamaren          #+#    #+#             */
+<<<<<<< HEAD
+/*   Updated: 2023/03/14 15:22:39 by rbourdil         ###   ########.fr       */
+=======
 /*   Updated: 2023/03/14 16:01:03 by pcamaren         ###   ########.fr       */
+>>>>>>> a422d52b6614c2a5605a2e4a0ef7ece0be9c5c55
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -976,6 +980,12 @@ void	part_reply(int dest_fd, const std::vector<std::string>& args)
 	send(dest_fd, err_message.c_str(), err_message.size(), 0);
 }
 
+void	kick_reply(int dest_fd, const std::vector<std::string>& args)
+{
+	std::string	prefix = ":" + args[0];
+	std::string	err_message = prefix + " KICK " + args[1] + " " + args[2] + " :" + args[3] + "\n";
+	send(dest_fd, err_message.c_str(), err_message.size(), 0);
+}
 
 // OTHER ERRORS
 
