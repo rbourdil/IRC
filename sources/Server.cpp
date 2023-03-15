@@ -1,5 +1,4 @@
 #include "../includes/Server.hpp"
-#include "../includes/Buffer.hpp"
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -9,7 +8,7 @@ Server::Server(int listener, Data *data) : _listener(listener), _data(data)
 {
 	_pfds.push_back(pollfd());
 	_pfds.back().fd = listener;
-	_pfds.back().events = POLLIN;
+	_pfds.back().events = POLLIN | POLLOUT;
 	_pfds.back().revents = 0;
 }
 
@@ -17,7 +16,7 @@ void Server::add_to_pfds(int new_fd)
 {
 	_pfds.push_back(pollfd());
 	_pfds.back().fd = new_fd;
-	_pfds.back().events = POLLIN;
+	_pfds.back().events = POLLIN | POLLOUT;
 	_pfds.back().revents = 0;
 }
 
@@ -110,7 +109,6 @@ pfd_iter Server::disconnect_user(pfd_iter iter)
 	send(iter->fd, err_message.c_str(), err_message.size(), 0);
 	_data->delete_user(iter->fd);
 	close(iter->fd);
-	_storage_map.erase(iter->fd);
 	iter = _pfds.erase(iter);
 	return (iter);
 }
@@ -125,6 +123,7 @@ void	Server::ping(int fd)
 
 void	Server::run()
 {
+	Command					exec(_data);
 	char					buff[BUFSIZE];
 
 	if (DEBUG)
@@ -149,7 +148,6 @@ void	Server::run()
 		{
 			int fd = accept_connection(0);
 			_data->add_user(fd, host, remoteIP);
-			_storage_map.insert(std::make_pair(fd, Buffer()));
 		}
 		pfd_iter _iter = _pfds.begin() + 1;
 		while (_iter != _pfds.end())
@@ -174,70 +172,63 @@ void	Server::run()
 					std::cerr << "Client from socket: " << _iter->fd << ": hung up" << std::endl;
 					_data->delete_user(_iter->fd);
 					close(_iter->fd);
-					_storage_map.erase(_iter->fd);
 					_iter = _pfds.erase(_iter);
 				}
 				else
 				{
 					_data->set_user_last_move(_iter->fd);
-					Buffer&	storage = (_storage_map.find(_iter->fd))->second;
-					if (storage.size() + count > BUFSIZE)
+					std::string	msg = get_raw(std::string(buff, buff + count));
+					std::cerr << "[ MSG ] " << msg << std::endl;
+					ssize_t	i,j;
+
+					i = j = 0;
+					while (i < count)
 					{
-						std::cerr << _iter->fd << " overflown its buffer" << std::endl;
-						_data->delete_user(_iter->fd);
+						while (j < count)
+						{
+							if (buff[j] == '\r')
+							{
+								j++;
+								if (buff[j] == '\n')
+								{
+									j++;
+									break;
+								}
+							}
+							else 
+								j++;
+						}
+						_data->write_inbuff(_iter->fd, buff + i, j - i);
+						parser	p(_data->get_inbuff(_iter->fd));
+						p.parse();
+						if (p.state() == VALID_CMD)
+						{
+							irc_cmd	cmd = p.out();
+							exec.execute_cmd(_iter->fd, cmd);
+						}
+						if (p.state() == VALID_CMD || p.state() == DUMP_CMD)
+							_data->reset_inbuff(_iter->fd);
+						i = j;
+					}
+					if (!_data->is_connected(_iter->fd))
+					{
+						std::cerr << "Client from socket: " << _iter->fd << " hung up" << std::endl;
 						close(_iter->fd);
-						_storage_map.erase(_iter->fd);
 						_iter = _pfds.erase(_iter);
 					}
 					else
-					{
-						std::string	msg = get_raw(std::string(buff, buff + count));
-						std::cerr << "[ MSG ] " << msg << std::endl;
-						ssize_t	i,j;
-
-						i = j = 0;
-						while (i < count)
-						{
-							while (j < count)
-							{
-								if (buff[j] == '\r')
-								{
-									j++;
-									if (buff[j] == '\n')
-									{
-										j++;
-										break;
-									}
-								}
-								else 
-									j++;
-							}
-							storage.append(buff + i, j);
-							parser	p(storage);
-							p.parse();
-							if (p.state() == VALID_CMD)
-							{
-								Command	exec(_data);
-								irc_cmd	cmd;
-
-								cmd = p.out();
-								exec.execute_cmd(_iter->fd, cmd);
-							}
-							if (p.state() == VALID_CMD || p.state() == DUMP_CMD)
-								storage.reset();
-							i = j;
-						}
-						if (!_data->is_connected(_iter->fd))
-						{
-							std::cerr << "Client from socket: " << _iter->fd << " hung up" << std::endl;
-							close(_iter->fd);
-							_storage_map.erase(_iter->fd);
-							_iter = _pfds.erase(_iter);
-						}
-						else
-							++_iter;
-					}
+						++_iter;
 				}
+			}
+			else if (_iter->revents & POLLOUT)
+			{
+				std::string	out = _data->flush_outbuff(_iter->fd, BUFSIZE);
+				if (out.size() != 0)
+				{
+					std::cerr << "[ OUT ] " << out << std::endl;
+					send(_iter->fd, out.c_str(), out.size(), 0);
+				}
+				++_iter;
 			}
 		}
 	}

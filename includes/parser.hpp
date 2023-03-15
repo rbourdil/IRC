@@ -50,7 +50,7 @@ class parser {
 
 	public:
 
-		parser(const Buffer& buff) : _scan(buff), _state(INCOMPLETE_CMD), _panic(false)
+		parser(const std::string& buff) : _scan(buff), _state(INCOMPLETE_CMD), _panic(false)
 		{
 			_current = get_token(_scan);
 		}

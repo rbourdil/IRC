@@ -6,28 +6,25 @@
 #include <iostream>
 
 #include "headers.hpp"
-#include "Buffer.hpp"
 
 #define BUFFSIZE 512
 #define _EOF_ -1
 
 class	scanner {
 
-	const char*	_start;
-	const char*	_current;
-	const char*	_end;
+	const std::string&			_buff;
+	std::string::const_iterator	_current;
 
 	public:
 
-	scanner(const Buffer& buff) :
-		_start(buff._buff),
-		_current(buff._buff),
-		_end(buff._current)
+	scanner(const std::string& buff) :
+		_buff(buff),
+		_current(buff.begin())
 		{ }
 
 	int	get(void)
 	{
-		if (_current == _end)
+		if (_current == _buff.end())
 			return (_EOF_);
 		return (*_current++);
 	}
@@ -39,7 +36,7 @@ class	scanner {
 
 	size_t	count(void)
 	{
-		return (_current - _start);
+		return (_current - _buff.begin());
 	}
 
 };
