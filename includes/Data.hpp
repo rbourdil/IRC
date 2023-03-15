@@ -433,19 +433,23 @@ class	Data {
 
 		int		user_is_unique(std::string &user)
 		{
+			std::cout << "user_is_unique: user is: " << user << std::endl;
 			std::map<int, Client>::iterator  it = _clients.begin();
 			std::pair<std::set<std::string>::iterator,bool> ret;
 			int	repeat = 0;
 			while (it != _clients.end())
 			{
-				if (it->second._username == user)
-					repeat++;
 				if (repeat > 1)
 					return -1;
+				if (it->second._nickname == user)
+					repeat++;
 				++it;
 			}
 			if (repeat == 1)
-				return (it->first);
+			{
+				std::cout << "it->first: " << it->first << std::endl;
+				return (get_user_fd(user));
+			}
 			else
 				return (0);
 		}

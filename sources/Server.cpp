@@ -85,46 +85,35 @@ int	Server::accept_connection(size_t location)
 	}
 }
 
-void	Server::handle_timeout(void)
+pfd_iter	Server::handle_timeout(pfd_iter _iter)
 {
-	std::vector<struct pollfd>::iterator _iter = _pfds.begin() + 1;
-	while (_iter != _pfds.end())
-	{
-		double time_diff = difftime(std::time(NULL), _data->get_user_last_move(_iter->fd));
-		double pong_diff = difftime(std::time(NULL), _data->get_user_last_pong(_iter->fd));
+	double time_diff = difftime(std::time(NULL), _data->get_user_last_move(_iter->fd));
+	double pong_diff = difftime(std::time(NULL), _data->get_user_last_pong(_iter->fd));
 
-		if ((!_data->get_user_was_ping(_iter->fd)) && time_diff > PING_TIME && time_diff < DISCONNECT_TIME)
-		{
-			ping(_iter->fd);
-			_data->set_user_last_pong(_iter->fd);
-			++_iter;
-		}
-		else if (_data->get_user_was_ping(_iter->fd) && pong_diff > PONG_TIME)
-		{
-			std::cout << "Will disconnect client from socket " << _iter->fd << " for innactivity" << std::endl;
-			std::string	err_message = "You are being disconnected for innactivity, bye boo xoxo\n";
-			send(_iter->fd, err_message.c_str(), err_message.size(), 0);
-			_data->delete_user(_iter->fd);
-			close(_iter->fd);
-			_storage_map.erase(_iter->fd);
-			_iter = _pfds.erase(_iter);
-		}
-		// else if (time_diff > DISCONNECT_TIME)
-		// {
-		// 	std::cout << "Will disconnect client from socket " << _iter->fd << " for innactivity" << std::endl;
-		// 	std::string	err_message = "You are being disconnected for innactivity, bye boo xoxo\n";
-		// 	send(_iter->fd, err_message.c_str(), err_message.size(), 0);
-		// 	_data->delete_user(_iter->fd);
-		// 	close(_iter->fd);
-		// 	_storage_map.erase(_iter->fd);
-		// 	_iter = _pfds.erase(_iter);
-		// }
-		else
-			++_iter;
+	if ((!_data->get_user_was_ping(_iter->fd)) && time_diff > PING_TIME && time_diff < DISCONNECT_TIME)
+	{
+		ping(_iter->fd);
+		_data->set_user_last_pong(_iter->fd);
+		++_iter;
 	}
+	else if (_data->get_user_was_ping(_iter->fd) && pong_diff > PONG_TIME)
+		_iter = disconnect_user(_iter);
+	else
+		++_iter;
+	return (_iter);
 }
 
-// void	Server::disconnect_user()
+pfd_iter Server::disconnect_user(pfd_iter iter)
+{
+	std::cout << "Will disconnect client from socket " << iter->fd << " for innactivity" << std::endl;
+	std::string	err_message = "ERROR: You are being disconnected for innactivity, bye boo xoxo\n";
+	send(iter->fd, err_message.c_str(), err_message.size(), 0);
+	_data->delete_user(iter->fd);
+	close(iter->fd);
+	_storage_map.erase(iter->fd);
+	iter = _pfds.erase(iter);
+	return (iter);
+}
 
 void	Server::ping(int fd)
 {
@@ -132,7 +121,6 @@ void	Server::ping(int fd)
 	std::string ping_message = "PING :" + _data->get_srvname() + "\n";
 	send(fd, ping_message.c_str(), ping_message.size(), 0);
 }
-
 
 
 void	Server::run()
@@ -156,49 +144,27 @@ void	Server::run()
 			exit(1);
 		}
 		// else if (poll_count == 0)
-		// 	handle_timeout();
+		// handle_timeout();
 		if (_pfds[0].revents & POLLIN)
 		{
 			int fd = accept_connection(0);
 			_data->add_user(fd, host, remoteIP);
 			_storage_map.insert(std::make_pair(fd, Buffer()));
 		}
-		std::vector<struct pollfd>::iterator _iter = _pfds.begin() + 1;
+		pfd_iter _iter = _pfds.begin() + 1;
 		while (_iter != _pfds.end())
 		{
 			// need to check for errors also ?
 			if (_iter->revents == 0)
 			{
-				// double time_diff = difftime(std::time(NULL), _data->get_user_last_move(_iter->fd));
-				// if (time_diff > PING_TIME && time_diff < DISCONNECT_TIME)
-				// {
-				// 	// Ping
-				// }
-				// else if (time_diff > DISCONNECT_TIME)
-				// {
-				// 	std::cout << "Will disconnect client from socket " << _iter->fd << " for innactivity" << std::endl;
-				// 	std::string	err_message = "You are being disconnected for innactivity, bye boo xoxo\n";
-				// 	send(_iter->fd, err_message.c_str(), err_message.size(), 0);
-				// 	_data->delete_user(_iter->fd);
-				// 	close(_iter->fd);
-				// 	_storage_map.erase(_iter->fd);
-				// 	_iter = _pfds.erase(_iter);
-				// }
-				++_iter;
+				_iter = handle_timeout(_iter);
+				// ++_iter;
 				continue;
 			}
 			if ( _iter->revents & POLLIN)
 			{
 				ssize_t	count = recv(_iter->fd, buff, BUFSIZE, 0);
-				if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
-				{
-					std::cerr << _iter->fd << " blocking error" << std::endl;
-					_data->delete_user(_iter->fd);
-					close(_iter->fd);
-					_storage_map.erase(_iter->fd);
-					_iter = _pfds.erase(_iter);
-				}
-				else if (count < 0)
+				if (count < 0)
 				{
 					perror("read");
 					exit(EXIT_FAILURE);

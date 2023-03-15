@@ -2,6 +2,7 @@
 
 void	Command::pass(int fd, const std::vector<std::string>& params)
 {
+	std::cout << "Entering pass" << std::endl;
 	_args.push_back(_data->get_srvname());
 	if (_data->is_registered(fd))
 		err_already_registered(fd, _args);
@@ -24,6 +25,7 @@ void	Command::pass(int fd, const std::vector<std::string>& params)
 
 void	Command::nick(int fd, const std::vector<std::string>& params)
 {
+	std::cout << "Entering nick" << std::endl;
 	_args.push_back(_data->get_srvname());
 	if (params.size() == 0)
 		err_no_nicknamegive(fd, _args);
@@ -53,6 +55,7 @@ void	Command::nick(int fd, const std::vector<std::string>& params)
 
 void	Command::user(int fd, const std::vector<std::string>& params)
 {
+	std::cout << "Entering user" << std::endl;
 	_args.push_back(_data->get_srvname());
 	if (_data->is_registered(fd))
 		err_already_registered(fd, _args);
@@ -182,6 +185,7 @@ void	Command::join(int fd, std::string channel, std::string key)
 	{
 		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
+		std::cout << "JOIN-errnosuchchannel" << std::endl;
 		err_nosuch_channel(fd, _args);
 	}
 	else if (!key.empty() && !valid_key(key))
@@ -294,6 +298,7 @@ void	Command::part(int fd, const std::string& channel, const std::string& messag
 	{
 		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
+		std::cout << "PART-errnosuchchannel" << std::endl;
 		err_nosuch_channel(fd, _args);
 	}
 	else if (!_data->is_in_channel(fd, channel))
@@ -328,6 +333,8 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 	if (!_data->channel_exists(channel))
 	{
 		_args.push_back(channel);
+		std::cout << "channel: " << channel << std::endl;
+		std::cout << "CHANNELMODE-errnosuchchannel" << std::endl;
 		err_nosuch_channel(fd, _args);
 	}
 	else if (channel[0] == '+')
@@ -640,6 +647,7 @@ void	Command::kick(int fd, const std::string& channel, const std::string& user, 
 	{
 		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
+		std::cout << "KICK-errnosuchchannel" << std::endl;
 		err_nosuch_channel(fd, _args);
 	}
 	else if (!_data->is_in_channel(fd, channel))
@@ -770,9 +778,15 @@ void	Command::mode_dispatch(int fd, const std::vector<std::string>& params)
 		err_need_moreparams(fd, _args);
 	}
 	else if (_data->nickname_exists(params[0]))
+	{
+		std::cout << "user mode dispatch" << std::endl;
 		user_mode(fd, params);
+	}
 	else
+	{
+		std::cout << "channel mode dispatch" << std::endl;
 		channel_mode(fd, params);
+	}
 }
 
 void	Command::kick_dispatch(int fd, const std::vector<std::string>& params)
@@ -874,6 +888,8 @@ Command::Command(Data* data) : _data(data)
 	_cmd_map.insert(std::make_pair("KICK", &Command::kick_dispatch));
 	_cmd_map.insert(std::make_pair("INVITE", &Command::invite));
 	_cmd_map.insert(std::make_pair("CAP", &Command::cap));
+	_cmd_map.insert(std::make_pair("WHOIS", &Command::whois));
+	_cmd_map.insert(std::make_pair("PING", &Command::ping));
 	// _cmd_map.insert(std::make_pair("WHO", &Command::who));
 }
 

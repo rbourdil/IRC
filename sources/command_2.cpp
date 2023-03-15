@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/14 17:30:59 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/14 21:33:11 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -396,6 +396,7 @@ void	Command::invite(int fd, const std::vector<std::string>& params)
 				else
 				{
 					_args.push_back(channel);
+					std::cout << "INVITE-errnosuchchannel" << std::endl;
 					err_nosuch_channel(fd, _args);
 					return;
 				}
@@ -414,10 +415,18 @@ void	Command::invite(int fd, const std::vector<std::string>& params)
 		err_not_registered(fd, _args);
 }
 
-// void	Command::who(int fd, const std::vector<std::string>& params)
-// {
-	
-// }
+void	Command::whois(int fd, const std::vector<std::string>& params)
+{
+	(void)fd;
+	(void)params;
+}
+
+void	Command::ping(int fd, const std::vector<std::string>& params)
+{
+	std::cout << "PING" << std::endl;
+	(void)fd;
+	(void)params;
+}
 
 
 /*---------------------------HELPER FUNCTIONS---------------------------------*/
@@ -445,6 +454,7 @@ int		Command::parse_target(int fd, std::string &target)
 			_args.push_back(target);
 			if (target.at(0) == '#' || target.at(0) == '&' || target.at(0) == '+' || target.at(0) == '!')
 			{
+				std::cout << "PRIVMSG-PARSETARGET-NOSUCH-CHANNEL" << std::endl;
 				err_nosuch_channel(fd, _args);
 				return -1;
 			}
@@ -520,6 +530,7 @@ int		Command::parse_target(int fd, std::string &target)
 				else if (valid_user == 0)
 				{
 					_args.push_back(user);
+					std::cout << "nani-meow" << std::endl;
 					error_user(fd, _args);
 					return -1;
 				}
@@ -550,7 +561,10 @@ int		Command::parse_target(int fd, std::string &target)
 						std::string servername(scanner._current, target.end());
 						std::cout << "SERVERNAME: user'%'host@servername: " << servername << std::endl;
 						if (servername == _data->get_srvname())
+						{
+							std::cout << "valid user: " << valid_user << std::endl;
 							return (valid_user);
+						}
 						else
 						{
 							err_nosuch_server(fd, _args);
