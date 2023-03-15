@@ -660,6 +660,13 @@ class	Command {
 			_data->write_outbuff(dest_fd, err_message);
 		}
 
+		void	topic_reply(int dest_fd, const std::vector<std::string>& args)
+		{
+			std::string	prefix = ":" + args[0];
+			std::string	err_message = prefix + " TOPIC " + args[1] + " :" + args[2] + "\r\n";
+			_data->write_outbuff(dest_fd, err_message);
+		}
+
 		void	kick_reply(int dest_fd, const std::vector<std::string>& args)
 		{
 			std::string	prefix = ":" + args[0];
