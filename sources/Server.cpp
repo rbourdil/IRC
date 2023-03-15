@@ -135,15 +135,19 @@ void	Server::run()
 	}
 	while (1)
 	{
+		if (g_die == 1)
+			return;
 		int poll_count = poll(&_pfds[0], _pfds.size(), TIMEOUT);
+
+        // the poll call was interrupted by a signal, retry
+		if (errno == EINTR)
+        	continue;
 
 		if (poll_count == -1)
 		{
 			perror("poll:");
 			exit(1);
 		}
-		// else if (poll_count == 0)
-		// handle_timeout();
 		if (_pfds[0].revents & POLLIN)
 		{
 			int fd = accept_connection(0);
@@ -152,11 +156,10 @@ void	Server::run()
 		pfd_iter _iter = _pfds.begin() + 1;
 		while (_iter != _pfds.end())
 		{
-			// need to check for errors also ?
 			if (_iter->revents == 0)
 			{
-				_iter = handle_timeout(_iter);
-				// ++_iter;
+				// _iter = handle_timeout(_iter);
+				++_iter;
 				continue;
 			}
 			if ( _iter->revents & POLLIN)
