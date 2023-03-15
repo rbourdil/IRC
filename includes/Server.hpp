@@ -4,7 +4,6 @@
 #include "SocketServer.hpp"
 #include "Data.hpp"
 #include "Command.hpp"
-#include "Reply.hpp"
 
 class Server
 {
@@ -13,12 +12,9 @@ class Server
 	private:
 		std::vector<struct pollfd>			_pfds;
 		int 								_listener;
-		std::map<int, Client*>				_clients;
 		char								remoteIP[INET6_ADDRSTRLEN];
 		char 								host[NI_MAXHOST];
 		Data								*_data;
-		std::map<int, Buffer>               _storage_map;
-
 	public:
 	
 	Server(int listener, Data* data);

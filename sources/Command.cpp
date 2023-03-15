@@ -18,6 +18,7 @@ void	Command::pass(int fd, const std::vector<std::string>& params)
 		_data->set_user_state(fd, PASSWD_VALID);
 		if (_data->is_registered(fd))
 		{
+			_args.push_back(_data->get_nickname(fd));
 			_args.push_back(_data->get_user_info(fd));
 			rpl_welcome_message(fd, _args);
 		}
@@ -47,6 +48,7 @@ void	Command::nick(int fd, const std::vector<std::string>& params)
 		_data->set_user_state(fd, NICK_VALID);
 		if (_data->is_registered(fd))
 		{
+			_args.push_back(_data->get_nickname(fd));
 			_args.push_back(_data->get_user_info(fd));
 			rpl_welcome_message(fd, _args);
 		}
@@ -80,6 +82,7 @@ void	Command::user(int fd, const std::vector<std::string>& params)
 		_data->set_user_state(fd, USER_VALID);
 		if (_data->is_registered(fd))
 		{
+			_args.push_back(_data->get_nickname(fd));
 			_args.push_back(_data->get_user_info(fd));
 			rpl_welcome_message(fd, _args);
 		}
@@ -906,4 +909,5 @@ void	Command::execute_cmd(int fd, const irc_cmd& cmd)
 		_args.push_back(cmd._cmd);
 		err_unknown_command(fd, _args);
 	}
+	_args.clear();
 }

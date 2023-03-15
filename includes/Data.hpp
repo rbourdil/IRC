@@ -61,6 +61,9 @@ struct	Client {
 	time_t						_last_pong;
 	bool						_was_ping;
 
+	std::string					_in_buff;
+	std::string					_out_buff;
+
 	Client(const std::string& hostname, const std::string& hostaddress) : _state(UNREGISTERED_STATE), _hostname(hostname), _hostaddress(hostaddress), _mode(0), _last_move(std::time(NULL)), _was_ping(false) { }
 
 };
@@ -133,7 +136,89 @@ class	Data {
 				_clients.erase(it);
 			}
 		}		
-		
+
+		void	reset_inbuff(int fd)
+		{
+			client_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+				it->second._in_buff.clear();
+		}
+
+		void	reset_outbuff(int fd)
+		{
+			client_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+				it->second._out_buff.clear();
+		}
+
+		std::string	flush_inbuff(int fd, size_t count)
+		{
+			client_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+			{
+				std::string&	_in_buff = it->second._out_buff;
+				if (count > _in_buff.size())
+					count = _in_buff.size();
+				std::string	tmp = std::string(_in_buff.begin(), _in_buff.begin() + count);
+				_in_buff.erase(_in_buff.begin(), _in_buff.begin() + count);
+				return (tmp);
+			}
+			else
+				throw std::runtime_error("flush_inbuff: no account registered with this file descriptor");
+		}
+
+		std::string	flush_outbuff(int fd, size_t count)
+		{
+			client_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+			{
+				std::string&	_out_buff = it->second._out_buff;
+				if (count > _out_buff.size())
+					count = _out_buff.size();
+				std::string	tmp = std::string(_out_buff.begin(), _out_buff.begin() + count);
+				_out_buff.erase(_out_buff.begin(), _out_buff.begin() + count);
+				return (tmp);
+			}
+			else
+				throw std::runtime_error("flush_outbuff: no account registered with this file descriptor");
+		}
+
+		void	write_inbuff(int fd, const char* s, size_t count)
+		{
+			client_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+				it->second._in_buff.append(s, count);
+		}
+
+		void	write_outbuff(int fd, const char* s, size_t count)
+		{
+			client_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+				it->second._out_buff.append(s, count);
+		}
+
+		void	write_inbuff(int fd, const std::string& s)
+		{
+			client_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+				it->second._in_buff.append(s);
+		}
+
+		void	write_outbuff(int fd, const std::string& s)
+		{
+			client_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+				it->second._out_buff.append(s);
+		}
+
 		void	add_nickname(int fd, const std::string& nick)
 		{
 			client_iterator	it = _clients.find(fd);
@@ -379,6 +464,26 @@ class	Data {
 		}
 
 		// lookup
+
+		const std::string&	get_inbuff(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+			
+			if (it != _clients.end())
+				return (it->second._in_buff);
+			else
+				throw std::runtime_error("get_inbuff: no account registered with this file descriptor");
+		}
+
+		const std::string&	get_outbuff(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+			
+			if (it != _clients.end())
+				return (it->second._out_buff);
+			else
+				throw std::runtime_error("get_outbuff: no account registered with this file descriptor");
+		}
 
 		bool	comp_oper_name(const std::string& name)
 		{
