@@ -50,6 +50,7 @@ class	Command {
 		void	whois(int fd, const std::vector<std::string>& params);
 		void	cap(int fd, const std::vector<std::string>& params);
 		void	ping(int fd, const std::vector<std::string>& params);
+		void	die(int fd, const std::vector<std::string>& params);
 
 		// helper functions
 		void	quit_dispatch(int fd, const std::vector<std::string>& params);

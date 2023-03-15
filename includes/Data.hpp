@@ -91,6 +91,7 @@ class	Data {
 
 	private:
 
+
 		const std::string	_srvname;
 		const std::string	_passwd;
 
@@ -110,11 +111,10 @@ class	Data {
 	public:
 
 		// constructor
-		explicit Data(const std::string& srvname, const char* passwd) : _srvname(srvname), _passwd(passwd), _oper_name("operator"), _oper_passwd("operator") { }
+		explicit Data(const std::string& srvname, const char* passwd) : _srvname(srvname), _passwd(passwd), _oper_name("operator"), _oper_passwd("operator"){ }
 
 		// modifiers
-
-			//user operations
+		//user operations
 		void	add_user(int fd, const std::string& hostname, const std::string& hostaddress)
 		{
 			_clients.insert(std::make_pair(fd, Client(hostname, hostaddress)));

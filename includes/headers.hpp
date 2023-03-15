@@ -24,6 +24,7 @@
 #include <map>
 #include <set>
 #include <ctime>
+#include <csignal>
 
 #ifndef DEBUG
 #define DEBUG 0
@@ -123,5 +124,7 @@
 #define MAX_CHAN_COUNT 10
 
 typedef std::vector<struct pollfd>::iterator pfd_iter;
+
+extern int		g_die;
 
 #endif

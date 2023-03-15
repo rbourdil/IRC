@@ -879,7 +879,7 @@ Command::Command(Data* data) : _data(data)
 	_cmd_map.insert(std::make_pair("PONG", &Command::pong));
 	_cmd_map.insert(std::make_pair("PRIVMSG", &Command::privmsg));
 	_cmd_map.insert(std::make_pair("MODE", &Command::mode_dispatch));
-	_cmd_map.insert(std::make_pair("OPER", &Command::mode_dispatch));
+	_cmd_map.insert(std::make_pair("OPER", &Command::oper));
 	_cmd_map.insert(std::make_pair("QUIT", &Command::quit_dispatch));
 	_cmd_map.insert(std::make_pair("JOIN", &Command::join_dispatch));
 	_cmd_map.insert(std::make_pair("PART", &Command::part_dispatch));
@@ -890,6 +890,7 @@ Command::Command(Data* data) : _data(data)
 	_cmd_map.insert(std::make_pair("CAP", &Command::cap));
 	_cmd_map.insert(std::make_pair("WHOIS", &Command::whois));
 	_cmd_map.insert(std::make_pair("PING", &Command::ping));
+	_cmd_map.insert(std::make_pair("DIE", &Command::die));
 	// _cmd_map.insert(std::make_pair("WHO", &Command::who));
 }
 

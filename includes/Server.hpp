@@ -18,6 +18,7 @@ class Server
 		char 								host[NI_MAXHOST];
 		Data								*_data;
 		std::map<int, Buffer>               _storage_map;
+
 	public:
 	
 	Server(int listener, Data* data);
@@ -27,14 +28,14 @@ class Server
 	void		*get_in_addr(struct sockaddr *sa);
 	void		send_data(int numbytes, int sender_fd);
 	void		del_from_pfds(pfd_iter iter);
-	pfd_iter	handle_timeout(pfd_iter _iter);
 
-	int		get_fd(int i);
-	int		accept_connection(size_t location);
-	int		receive_send_data(pfd_iter iter);
-	int		receive_data(pfd_iter iter, int *numbytes);
-	void	ping(int fd);
-	pfd_iter disconnect_user(pfd_iter iter);
+	int			get_fd(int i);
+	int			accept_connection(size_t location);
+	int			receive_send_data(pfd_iter iter);
+	int			receive_data(pfd_iter iter, int *numbytes);
+	void		ping(int fd);
+	pfd_iter	handle_timeout(pfd_iter _iter);
+	pfd_iter	disconnect_user(pfd_iter iter);
 
 
 };

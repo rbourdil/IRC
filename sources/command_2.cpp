@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/14 21:33:11 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/15 18:49:46 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -428,6 +428,19 @@ void	Command::ping(int fd, const std::vector<std::string>& params)
 	(void)params;
 }
 
+void	Command::die(int fd, const std::vector<std::string>& params)
+{
+	if (params.size() == 0)
+	{
+		_args.push_back(_data->get_srvname());
+		if (_data->check_user_flags(fd, OPER_UFLAG))
+		{
+			g_die = 1;
+		}
+		else
+			err_noprivileges(fd, _args);	
+	}
+}
 
 /*---------------------------HELPER FUNCTIONS---------------------------------*/
 
