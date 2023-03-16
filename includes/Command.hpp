@@ -125,7 +125,7 @@ class	Command {
 		void	err_nickname_inuse(int dest_fd, const std::vector<std::string> args)
 		{
 			std::string	prefix = ":" + args[0] + " 433 ";
-			std::string err_message = prefix + ":Nickname is already in use\r\n";
+			std::string err_message = prefix + "* " + args[1] + " :Nickname is already in use\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 		// 484
@@ -139,7 +139,7 @@ class	Command {
 		void	err_passwd_mismatch(int dest_fd, const std::vector<std::string> args)
 		{
 			std::string	prefix = ":" + args[0] + " 464 ";
-			std::string err_message = prefix + ":Password incorrect\r\n";
+			std::string err_message = prefix + "* " + ":Password incorrect\r\n";
 			_data->write_outbuff(dest_fd, err_message);		
 		}
 		// 501
