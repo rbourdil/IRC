@@ -163,7 +163,6 @@ void	Server::run()
 			}
 			if ( _iter->revents & POLLIN)
 			{
-				std::cerr << "at POLLIN" << std::endl;
 				ssize_t	count = recv(_iter->fd, buff, BUFSIZE, 0);
 				if (count < 0)
 				{
@@ -181,7 +180,7 @@ void	Server::run()
 				{
 					_data->set_user_last_move(_iter->fd);
 					std::string	msg = get_raw(std::string(buff, buff + count));
-					std::cerr << "[ MSG ] " << msg << std::endl;
+					std::cout << "[ MSG ] " << msg << std::endl;
 					ssize_t	i,j;
 
 					i = j = 0;
@@ -202,7 +201,6 @@ void	Server::run()
 								j++;
 						}
 						_data->write_inbuff(_iter->fd, buff + i, j - i);
-						std::cerr << "INBUFF: " << get_raw(_data->get_inbuff(_iter->fd)) << std::endl;
 						parser	p(_data->get_inbuff(_iter->fd));
 						p.parse();
 						if (p.state() == VALID_CMD)
@@ -230,7 +228,7 @@ void	Server::run()
 				std::string	out = _data->flush_outbuff(_iter->fd, BUFSIZE);
 				if (out.size() != 0)
 				{
-					std::cerr << "[ OUT ] " << out << std::endl;
+					std::cout << "[ OUT ] " << out << std::endl;
 					send(_iter->fd, out.c_str(), out.size(), 0);
 				}
 				++_iter;

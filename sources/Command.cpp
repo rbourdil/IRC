@@ -255,7 +255,7 @@ void	Command::join(int fd, std::string channel, std::string key)
 		_args.push_back(channel);
 		err_channel_isfull(fd, _args);
 	}
-		else // user joins an existing channel
+	else // user joins an existing channel
 	{
 		_data->add_user_to_channel(fd, channel);
 		_data->add_channel_to_user(fd, channel);
@@ -292,7 +292,6 @@ void	Command::join(int fd, std::string channel, std::string key)
 		}
 		rpl_nam_reply(fd, _args);
 	}
-	// implement ban masks
 }
 
 void	Command::part(int fd, const std::string& channel, const std::string& message)
@@ -336,8 +335,6 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 	if (!_data->channel_exists(channel))
 	{
 		_args.push_back(channel);
-		std::cout << "channel: " << channel << std::endl;
-		std::cout << "CHANNELMODE-errnosuchchannel" << std::endl;
 		err_nosuch_channel(fd, _args);
 	}
 	else if (channel[0] == '+')
@@ -782,12 +779,10 @@ void	Command::mode_dispatch(int fd, const std::vector<std::string>& params)
 	}
 	else if (_data->nickname_exists(params[0]))
 	{
-		std::cout << "user mode dispatch" << std::endl;
 		user_mode(fd, params);
 	}
 	else
 	{
-		std::cout << "channel mode dispatch" << std::endl;
 		channel_mode(fd, params);
 	}
 }

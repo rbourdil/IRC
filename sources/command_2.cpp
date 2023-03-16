@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/16 12:24:21 by rbourdil         ###   ########.fr       */
+/*   Updated: 2023/03/16 17:51:55 by rbourdil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,8 @@ void	Command::topic(int fd, const std::vector<std::string>& params)
 						}
 						else
 						{
-							err_nochan_modes(fd, _args);
+							_args.push_back(_data->get_srvname());
+							_args.push_back(channel);
 							err_chano_privsneeded(fd, _args);
 						}
 					}
@@ -89,11 +90,18 @@ void	Command::topic(int fd, const std::vector<std::string>& params)
 				}
 			}
 			else
+			{
+				_args.push_back(_data->get_srvname());
+				_args.push_back(channel);
 				err_noton_channel(fd, _args);
+			}
 		}
 	}
 	else
+	{
+		_args.push_back(_data->get_srvname());
 		err_not_registered(fd, _args);
+	}
 }
 
 void	Command::names(int fd, const std::vector<std::string>& params)
@@ -252,7 +260,6 @@ void	Command::privmsg(int fd, const std::vector<std::string>& params)
 		std::vector<std::string> target = parse_list(params[0]);
 		std::string message = params[1];
 		std::vector<std::string>::iterator target_iter = target.begin();
-		std::cout << "first element of vector: " << *target_iter << std::endl;
 		int ret_fd;
 		while (target_iter != target.end())
 		{
@@ -269,14 +276,9 @@ void	Command::privmsg(int fd, const std::vector<std::string>& params)
 					_args.push_back(_data->get_nickname(ret_fd));
 					_args.push_back(message);
 					privmsg_reply(ret_fd, _args);
-					//std::string sender_nick = _data->get_nickname(fd);
-					//message = sender_nick + ": " + message + "\n";
-					//send(ret_fd, message.c_str(), message.size(), 0);
 				}
-				++target_iter;
 			}
-			else
-				++target_iter;
+			++target_iter;
 			_args.clear();
 		}
 	}
@@ -287,7 +289,6 @@ void	Command::notice(int fd, const std::vector<std::string>& params)
 	int p_size = params.size();
 	if (p_size > 2)
 		return;
-	_args.push_back(_data->get_srvname());
 	if (_data->is_registered(fd))
 	{
 		if (p_size == 0)
@@ -306,24 +307,29 @@ void	Command::notice(int fd, const std::vector<std::string>& params)
 				if (ret_fd != -1)
 				{
 					if (ret_fd == -5)
-						send_to_chan(fd, *target_iter, message);
+						send_to_chan_notice(fd, *target_iter, message);
 					else if (ret_fd == -6)
-						send_to_nick(fd, *target_iter, message);
+						send_to_nick_notice(fd, *target_iter, message);
 					else
 					{
-						std::string sender_nick = _data->get_nickname(fd);
-						message = sender_nick + ": " + message + "\n";
-						send(ret_fd, message.c_str(), message.size(), 0);
+						_args.push_back(_data->get_user_info(fd));
+						_args.push_back(params[0]);
+						_args.push_back(message);
+						notice_reply(ret_fd, _args);
 					}
 					++target_iter;
 				}
 				else
 					++target_iter;
+				_args.clear();
 			}
 		}
 	}
 	else
+	{
+		_args.push_back(_data->get_srvname());
 		err_not_registered(fd, _args);
+	}
 }
 
 void	Command::invite(int fd, const std::vector<std::string>& params)
@@ -680,22 +686,19 @@ int		Command::parse_target(int fd, std::string &target)
 
 void	Command::send_to_chan(int fd, std::string &channel, std::string &message)
 {
-	std::cout << "nani" << std::endl;
 	if (_data->is_banned(fd, channel))
 	{
-		std::cout << "nani2" << std::endl;
 		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
 		err_cannotsend_tochan(fd, _args);
 	}
 	else if (_data->check_channel_flags(channel, NO_MESSAGES_CFLAG))
 	{
-		std::cout << "nani3" << std::endl;
 		if (_data->is_in_channel(fd, channel))
 		{
 			if (_data->check_channel_flags(channel, MODERATED_CFLAG))
 			{
-				if (_data->check_user_flags(fd, OPER_UFLAG))
+				if (_data->check_user_flags(fd, OPER_UFLAG) || _data->check_member_status(channel, fd, VOICE_MFLAG))
 				{
 					std::vector<int> users_chan = _data->get_members_list_fd(channel);
 					std::vector<int>::iterator it = users_chan.begin();
@@ -722,16 +725,23 @@ void	Command::send_to_chan(int fd, std::string &channel, std::string &message)
 					}
 				}
 				else
+				{
+					_args.push_back(_data->get_srvname());
+					_args.push_back(channel);
 					err_cannotsend_tochan(fd, _args);
+				}
 			}
 		}
 		else
+		{
+			_args.push_back(_data->get_srvname());
+			_args.push_back(channel);
 			err_cannotsend_tochan(fd, _args);
+		}
 	}
 	else if (_data->check_channel_flags(channel, MODERATED_CFLAG))
 	{
-		std::cout << "nani4" << std::endl;
-		if (_data->check_user_flags(fd, OPER_UFLAG))
+		if (_data->check_user_flags(fd, OPER_UFLAG) || _data->check_member_status(channel, fd, VOICE_MFLAG))
 		{
 			std::vector<int> users_chan = _data->get_members_list_fd(channel);
 			std::vector<int>::iterator it = users_chan.begin();
@@ -756,8 +766,9 @@ void	Command::send_to_chan(int fd, std::string &channel, std::string &message)
 		}
 		else
 		{
+			_args.push_back(_data->get_srvname());
+			_args.push_back(channel);
 			err_cannotsend_tochan(fd, _args);
-			err_chano_privsneeded(fd, _args);
 		}
 	}
 	else
@@ -786,8 +797,6 @@ void	Command::send_to_chan(int fd, std::string &channel, std::string &message)
 			}
 		}
 	}
-	std::cout << "nani5" << std::endl;
-	// _args.erase(_args.begin() + 1, _args.end());
 }	
 
 void	Command::send_to_nick(int fd, std::string &nick, std::string &message)
@@ -959,25 +968,22 @@ int		Command::parse_target_notice(std::string &target)
 				return -1;
 		}
 	}
-	std::cout << "extra return" << std::endl;
 	return -1;
 }
 
 void	Command::send_to_chan_notice(int fd, std::string &channel, std::string &message)
 {
-	if (_data->check_user_flags(fd, RESTRICTED_UFLAG))
+	if (_data->is_banned(fd, channel))
 	{
-		std::cout << "nani2" << std::endl;
-		return ;
+		return;
 	}
 	else if (_data->check_channel_flags(channel, NO_MESSAGES_CFLAG))
 	{
-		std::cout << "nani3" << std::endl;
 		if (_data->is_in_channel(fd, channel))
 		{
 			if (_data->check_channel_flags(channel, MODERATED_CFLAG))
 			{
-				if (_data->check_user_flags(fd, OPER_UFLAG))
+				if (_data->check_user_flags(fd, OPER_UFLAG) || _data->check_member_status(channel, fd, VOICE_MFLAG))
 				{
 					std::vector<int> users_chan = _data->get_members_list_fd(channel);
 					std::vector<int>::iterator it = users_chan.begin();
@@ -992,10 +998,11 @@ void	Command::send_to_chan_notice(int fd, std::string &channel, std::string &mes
 							}
 							else
 							{
-								std::string sender_nick = _data->get_nickname(fd);
-								message = sender_nick + ": " + message + "\n";
-								send(*it, message.c_str(), message.size(), 0);
-								message = original_message;
+								_args.push_back(_data->get_user_info(fd));
+								_args.push_back(channel);
+								_args.push_back(message);
+								notice_reply(*it, _args);
+								_args.clear();
 							}
 						}
 					}
@@ -1009,8 +1016,7 @@ void	Command::send_to_chan_notice(int fd, std::string &channel, std::string &mes
 	}
 	else if (_data->check_channel_flags(channel, MODERATED_CFLAG))
 	{
-		std::cout << "nani4" << std::endl;
-		if (_data->check_user_flags(fd, OPER_UFLAG))
+		if (_data->check_user_flags(fd, OPER_UFLAG) || _data->check_member_status(channel, fd, VOICE_MFLAG))
 		{
 			std::vector<int> users_chan = _data->get_members_list_fd(channel);
 			std::vector<int>::iterator it = users_chan.begin();
@@ -1021,10 +1027,11 @@ void	Command::send_to_chan_notice(int fd, std::string &channel, std::string &mes
 					continue;
 				else
 				{
-					std::string sender_nick = _data->get_nickname(fd);
-					message = sender_nick + ": " + message + "\n";
-					send(*it, message.c_str(), message.size(), 0);
-					message = original_message;
+					_args.push_back(_data->get_user_info(fd));
+					_args.push_back(channel);
+					_args.push_back(message);
+					notice_reply(*it, _args);
+					_args.clear();
 				}
 			}
 		}
@@ -1048,15 +1055,15 @@ void	Command::send_to_chan_notice(int fd, std::string &channel, std::string &mes
 				}
 				else
 				{
-					std::string sender_nick = _data->get_nickname(fd);
-					message = sender_nick + ": " + message + "\n";
-					send(*it, message.c_str(), message.size(), 0);
-					message = original_message;
+					_args.push_back(_data->get_user_info(fd));
+					_args.push_back(channel);
+					_args.push_back(message);
+					notice_reply(*it, _args);
 				}	
+				_args.clear();
 			}
 		}
 	}
-	std::cout << "nani5" << std::endl;
 }	
 
 void	Command::send_to_nick_notice(int fd, std::string &nick, std::string &message)
@@ -1068,8 +1075,9 @@ void	Command::send_to_nick_notice(int fd, std::string &nick, std::string &messag
 	}
 	else
 	{
-		std::string sender_nick = _data->get_nickname(fd);
-		message = sender_nick + ": " + message + "\n";	
-		send(dest_fd, message.c_str(), message.size(), 0);
+		_args.push_back(_data->get_user_info(fd));
+		_args.push_back(nick);
+		_args.push_back(message);
+		notice_reply(fd, _args);
 	}
 }

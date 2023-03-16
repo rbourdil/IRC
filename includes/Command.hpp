@@ -418,7 +418,7 @@ class	Command {
 		void	rpl_channel_modeis(int dest_fd, const std::vector<std::string> args)
 		{
 			std::string	prefix = ":" + args[0] + " 324 ";
-			std::string err_message = prefix + args[1] + " " + args[2] +"\r\n";
+			std::string	err_message = prefix + _data->get_nickname(dest_fd) + " " + args[1] + " " + args[2] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);		
 		}
 
@@ -679,6 +679,13 @@ class	Command {
 		{
 			std::string	prefix = ":" + args[0];
 			std::string	err_message = prefix + " PRIVMSG " + args[1] + " :" + args[2] + "\r\n";
+			_data->write_outbuff(dest_fd, err_message);
+		}
+
+		void	notice_reply(int dest_fd, const std::vector<std::string>& args)
+		{
+			std::string	prefix = ":" + args[0];
+			std::string	err_message = prefix + " NOTICE " + args[1] + " :" + args[2] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 
