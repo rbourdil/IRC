@@ -8,7 +8,7 @@ Server::Server(int listener, Data *data) : _listener(listener), _data(data)
 {
 	_pfds.push_back(pollfd());
 	_pfds.back().fd = listener;
-	_pfds.back().events = POLLIN | POLLOUT;
+	_pfds.back().events = POLLIN;
 	_pfds.back().revents = 0;
 }
 
@@ -158,12 +158,12 @@ void	Server::run()
 		{
 			if (_iter->revents == 0)
 			{
-				// _iter = handle_timeout(_iter);
-				++_iter;
+				_iter = handle_timeout(_iter);
 				continue;
 			}
 			if ( _iter->revents & POLLIN)
 			{
+				std::cerr << "at POLLIN" << std::endl;
 				ssize_t	count = recv(_iter->fd, buff, BUFSIZE, 0);
 				if (count < 0)
 				{
@@ -202,6 +202,7 @@ void	Server::run()
 								j++;
 						}
 						_data->write_inbuff(_iter->fd, buff + i, j - i);
+						std::cerr << "INBUFF: " << get_raw(_data->get_inbuff(_iter->fd)) << std::endl;
 						parser	p(_data->get_inbuff(_iter->fd));
 						p.parse();
 						if (p.state() == VALID_CMD)
@@ -225,6 +226,7 @@ void	Server::run()
 			}
 			else if (_iter->revents & POLLOUT)
 			{
+				//std::cerr << "at pollout" << std::endl;
 				std::string	out = _data->flush_outbuff(_iter->fd, BUFSIZE);
 				if (out.size() != 0)
 				{

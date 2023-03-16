@@ -671,7 +671,21 @@ class	Command {
 		void	kick_reply(int dest_fd, const std::vector<std::string>& args)
 		{
 			std::string	prefix = ":" + args[0];
-			std::string	err_message = prefix + " KICK " + args[1] + " " + args[2] + " :" + args[3] + "\n";
+			std::string	err_message = prefix + " KICK " + args[1] + " " + args[2] + " :" + args[3] + "\r\n";
+			_data->write_outbuff(dest_fd, err_message);
+		}
+
+		void	privmsg_reply(int dest_fd, const std::vector<std::string>& args)
+		{
+			std::string	prefix = ":" + args[0];
+			std::string	err_message = prefix + " PRIVMSG " + args[1] + " :" + args[2] + "\r\n";
+			_data->write_outbuff(dest_fd, err_message);
+		}
+
+		void	pong_reply(int dest_fd, const std::vector<std::string>& args)
+		{
+			std::string	prefix = ":" + args[0];
+			std::string	err_message = prefix + " PONG " + args[1] + " " + args[2] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 

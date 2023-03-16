@@ -603,7 +603,12 @@ class	Data {
 			client_const_iterator	it = _clients.find(fd);
 
 			if (it != _clients.end())
-				return (it->second._hostname);
+			{
+				if (it->second._hostname == "localhost")
+					return (get_srvname());
+				else
+					return (it->second._hostname);
+			}
 			else
 				throw std::runtime_error("get_hostname: no account registered with this file descriptor");
 		}

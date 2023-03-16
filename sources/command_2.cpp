@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/15 21:03:42 by rbourdil         ###   ########.fr       */
+/*   Updated: 2023/03/16 12:24:21 by rbourdil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -229,20 +229,24 @@ void	Command::privmsg(int fd, const std::vector<std::string>& params)
 	int p_size = params.size();
 	if (p_size > 2)
 		return;
-	_args.push_back(_data->get_srvname());
 	if (!_data->is_registered(fd))
 	{
+		_args.push_back(_data->get_srvname());
 		err_not_registered(fd, _args);
 		return;
 	}
 	if (p_size == 0)
 	{
+		_args.push_back(_data->get_srvname());
 		_args.push_back("PRIVMSG");
 		err_notext_tosend(fd, _args);
 		err_norecipient(fd, _args);
 	}
 	else if (p_size == 1)
+	{
+		_args.push_back(_data->get_srvname());
 		err_notext_tosend(fd, _args);
+	}
 	else
 	{
 		std::vector<std::string> target = parse_list(params[0]);
@@ -261,15 +265,19 @@ void	Command::privmsg(int fd, const std::vector<std::string>& params)
 					send_to_nick(fd, *target_iter, message);
 				else
 				{
-					std::string sender_nick = _data->get_nickname(fd);
-					message = sender_nick + ": " + message + "\n";
-					send(ret_fd, message.c_str(), message.size(), 0);
+					_args.push_back(_data->get_user_info(fd));
+					_args.push_back(_data->get_nickname(ret_fd));
+					_args.push_back(message);
+					privmsg_reply(ret_fd, _args);
+					//std::string sender_nick = _data->get_nickname(fd);
+					//message = sender_nick + ": " + message + "\n";
+					//send(ret_fd, message.c_str(), message.size(), 0);
 				}
 				++target_iter;
 			}
 			else
 				++target_iter;
-			_args.erase(_args.begin() + 1, _args.end());
+			_args.clear();
 		}
 	}
 }
@@ -444,9 +452,24 @@ void	Command::whois(int fd, const std::vector<std::string>& params)
 
 void	Command::ping(int fd, const std::vector<std::string>& params)
 {
-	std::cout << "PING" << std::endl;
-	(void)fd;
-	(void)params;
+	if (params.size() < 1)
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back("PING");
+		err_need_moreparams(fd, _args);
+	}
+	else if ((params[0] != _data->get_hostname(fd)))
+	{
+		_args.push_back(_data->get_srvname());
+		err_noorigin(fd, _args);
+	}
+	else
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back(_data->get_srvname());
+		_args.push_back(_data->get_hostname(fd));
+		pong_reply(fd, _args);
+	}
 }
 
 void	Command::die(int fd, const std::vector<std::string>& params)
@@ -658,10 +681,11 @@ int		Command::parse_target(int fd, std::string &target)
 void	Command::send_to_chan(int fd, std::string &channel, std::string &message)
 {
 	std::cout << "nani" << std::endl;
-	_args.push_back(channel);
 	if (_data->is_banned(fd, channel))
 	{
 		std::cout << "nani2" << std::endl;
+		_args.push_back(_data->get_srvname());
+		_args.push_back(channel);
 		err_cannotsend_tochan(fd, _args);
 	}
 	else if (_data->check_channel_flags(channel, NO_MESSAGES_CFLAG))
@@ -682,18 +706,18 @@ void	Command::send_to_chan(int fd, std::string &channel, std::string &message)
 						{
 							if (_data->check_user_flags(*it, AWAY_UFLAG))
 							{
-								_args.pop_back();
+								_args.push_back(_data->get_srvname());
 								_args.push_back(_data->get_nickname(fd));
 								rpl_away(fd, _args);
-								_args.pop_back();
 							}
 							else
 							{
-								std::string sender_nick = _data->get_nickname(fd);
-								message = sender_nick + ": " + message + "\n";
-								send(*it, message.c_str(), message.size(), 0);
-								message = original_message;
+								_args.push_back(_data->get_user_info(fd));
+								_args.push_back(channel);
+								_args.push_back(message);
+								privmsg_reply(*it, _args);
 							}
+							_args.clear();
 						}
 					}
 				}
@@ -716,18 +740,18 @@ void	Command::send_to_chan(int fd, std::string &channel, std::string &message)
 			{
 				if (_data->check_user_flags(*it, AWAY_UFLAG))
 				{
-					_args.pop_back();
-					_args.push_back(_data->get_nickname(fd));
+					_args.push_back(_data->get_srvname());
+					_args.push_back(_data->get_nickname(*it));
 					rpl_away(fd, _args);
-					_args.pop_back();
 				}
 				else
 				{
-					std::string sender_nick = _data->get_nickname(fd);
-					message = sender_nick + ": " + message + "\n";
-					send(*it, message.c_str(), message.size(), 0);
-					message = original_message;
+					_args.push_back(_data->get_user_info(fd));
+					_args.push_back(channel);
+					_args.push_back(message);
+					privmsg_reply(*it, _args);
 				}
+				_args.clear();
 			}
 		}
 		else
@@ -747,18 +771,18 @@ void	Command::send_to_chan(int fd, std::string &channel, std::string &message)
 			{
 				if (_data->check_user_flags(*it, AWAY_UFLAG))
 				{
-					_args.pop_back();
-					_args.push_back(_data->get_nickname(fd));
+					_args.push_back(_data->get_srvname());
+					_args.push_back(_data->get_nickname(*it));
 					rpl_away(fd, _args);
-					_args.pop_back();
 				}
 				else
 				{
-					std::string sender_nick = _data->get_nickname(fd);
-					message = sender_nick + ": " + message + "\n";
-					send(*it, message.c_str(), message.size(), 0);
-					message = original_message;
+					_args.push_back(_data->get_user_info(fd));
+					_args.push_back(channel);
+					_args.push_back(message);
+					privmsg_reply(*it, _args);
 				}	
+				_args.clear();
 			}
 		}
 	}
@@ -771,16 +795,17 @@ void	Command::send_to_nick(int fd, std::string &nick, std::string &message)
 	int dest_fd = _data->get_user_fd(nick);
 	if (_data->check_user_flags(dest_fd, AWAY_UFLAG))
 	{
+		_args.push_back(_data->get_srvname());
 		_args.push_back(nick);
 		rpl_away(fd, _args);
 	}
 	else
 	{
-		std::string sender_nick = _data->get_nickname(fd);
-		message = sender_nick + ": " + message + "\n";	
-		send(dest_fd, message.c_str(), message.size(), 0);
+		_args.push_back(_data->get_user_info(fd));
+		_args.push_back(nick);
+		_args.push_back(message);
+		privmsg_reply(dest_fd, _args);
 	}
-	_args.erase(_args.begin() + 1, _args.end());
 }
 
 bool	Command::is_valid_host(std::string &host)
