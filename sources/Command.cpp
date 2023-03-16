@@ -37,8 +37,30 @@ void	Command::nick(int fd, const std::vector<std::string>& params)
 	}
 	else if (_data->nickname_exists(params[0]))
 	{
-		_args.push_back(params[0]);
-		err_nickname_inuse(fd, _args);
+		std::cout << "nickname exists" << std::endl;
+		if (!_data->is_registered(fd))
+		{
+			std::string nickname = params[0];
+			std::cout << "nickname: " << nickname << std::endl;
+			char c = '_';
+			nickname.insert(0, 1, c);
+			while (_data->nickname_exists(nickname))
+				nickname.insert(0, 1, c);
+			std::cout << "after insert nickname: " << nickname << std::endl;
+			_data->add_nickname(fd, nickname);
+			_data->set_user_state(fd, NICK_VALID);
+			if (_data->is_registered(fd))
+			{
+				_args.push_back(_data->get_nickname(fd));
+				_args.push_back(_data->get_user_info(fd));
+				rpl_welcome_message(fd, _args);
+			}
+		}
+		else
+		{
+			_args.push_back(params[0]);
+			err_nickname_inuse(fd, _args);	
+		}
 	}
 	else if (_data->check_user_flags(fd, RESTRICTED_UFLAG))
 		err_restricted(fd, _args);

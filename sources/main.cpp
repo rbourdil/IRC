@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/26 19:46:46 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/15 19:38:29 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/15 21:14:12 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,8 @@ int g_die = 0;
 
 static void	handle_signal(int signal)
 {
-	std::cout << "caught signal" << signal << std::endl;
+	(void)signal;
+	std::cout << "\n" << std::endl;
 	g_die = 1;
 }
 
