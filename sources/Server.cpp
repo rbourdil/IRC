@@ -224,7 +224,6 @@ void	Server::run()
 			}
 			else if (_iter->revents & POLLOUT)
 			{
-				//std::cerr << "at pollout" << std::endl;
 				std::string	out = _data->flush_outbuff(_iter->fd, BUFSIZE);
 				if (out.size() != 0)
 				{

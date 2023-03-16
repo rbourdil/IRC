@@ -2,7 +2,6 @@
 
 void	Command::pass(int fd, const std::vector<std::string>& params)
 {
-	std::cout << "Entering pass" << std::endl;
 	_args.push_back(_data->get_srvname());
 	if (_data->is_registered(fd))
 		err_already_registered(fd, _args);
@@ -26,7 +25,6 @@ void	Command::pass(int fd, const std::vector<std::string>& params)
 
 void	Command::nick(int fd, const std::vector<std::string>& params)
 {
-	std::cout << "Entering nick" << std::endl;
 	_args.push_back(_data->get_srvname());
 	if (params.size() == 0)
 		err_no_nicknamegive(fd, _args);
@@ -57,7 +55,6 @@ void	Command::nick(int fd, const std::vector<std::string>& params)
 
 void	Command::user(int fd, const std::vector<std::string>& params)
 {
-	std::cout << "Entering user" << std::endl;
 	_args.push_back(_data->get_srvname());
 	if (_data->is_registered(fd))
 		err_already_registered(fd, _args);
@@ -92,7 +89,11 @@ void	Command::user(int fd, const std::vector<std::string>& params)
 void	Command::oper(int fd, const std::vector<std::string>& params)
 {
 	_args.push_back(_data->get_srvname());
-	if (params.size() < 2)
+	if (!_data->is_registered(fd))
+	{
+		err_not_registered(fd, _args);
+	}
+	else if (params.size() < 2)
 	{
 		_args.push_back("OPER");
 		err_need_moreparams(fd, _args);
@@ -119,15 +120,23 @@ void	Command::oper(int fd, const std::vector<std::string>& params)
 void	Command::user_mode(int fd, const std::vector<std::string>& params)
 {
 	_args.push_back(_data->get_srvname());
-	if (params[0] != _data->get_nickname(fd))
+	if (!_data->is_registered(fd))
+	{
+		err_not_registered(fd, _args);
+	}
+	else if (params[0] != _data->get_nickname(fd))
+	{
 		err_users_dontmatch(fd, _args);
+	}
 	else if (params.size() == 1)
 	{
 		_args.push_back(user_mode_str(fd));
 		rpl_umodeis(fd, _args);
 	}
 	else if (!valid_user_mode(params[1]))
+	{
 		err_umode_unknownflag(fd, _args);
+	}
 	else
 	{
 		std::string::const_iterator	it = params[1].begin();
