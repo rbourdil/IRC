@@ -704,12 +704,13 @@ void	Command::quit_dispatch(int fd, const std::vector<std::string>& params)
 	std::set<int>					friends = _data->get_friends(fd);
 	std::set<int>::const_iterator	it = friends.begin();
 
-	_args.push_back(_data->get_srvname());
-	_args.push_back(_data->get_hostname(fd));
+	_args.push_back(_data->get_user_info(fd));
 	if (params.size() > 0)
 		_args.push_back(params[0]);
+	else
+		_args.push_back("leaving");
 	for (; it != friends.end(); ++it)
-		error_quit(*it, _args);
+		quit_reply(*it, _args);
 	_data->delete_user(fd);
 	// need to modify to send a part message instead for anon channels
 }

@@ -696,6 +696,14 @@ class	Command {
 			_data->write_outbuff(dest_fd, err_message);
 		}
 
+		void	quit_reply(int dest_fd, const std::vector<std::string>& args)
+		{
+			std::string	prefix = ":" + args[0];
+			std::string	err_message = prefix + " QUIT :Quit: " + args[1] + "\r\n";
+			_data->write_outbuff(dest_fd, err_message);
+		}
+
+
 		// OTHER ERRORS
 
 		void	error_quit(int dest_fd, const std::vector<std::string>& args)
