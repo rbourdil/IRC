@@ -34,10 +34,12 @@ void	parser::get_params(void)
 void	parser::get_trailing(void)
 {
 	update_params();
-	while ((_current == ' ' || _current == WORD_TOKEN) && !_panic)
+	while ((_current == ' ' || _current == ':' || _current == WORD_TOKEN) && !_panic)
 	{
 		if (_current == ' ')
 			match(' ');
+		else if (_current == ':')
+			match(':');
 		else
 			match(WORD_TOKEN);
 		if (_current == ' ' || _current == WORD_TOKEN)

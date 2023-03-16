@@ -145,15 +145,15 @@ class	Command {
 		// 501
 		void	err_umode_unknownflag(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 501";
-			std::string err_message = prefix + ":Unknown MODE flag\r\n";
+			std::string	prefix = ":" + args[0] + " 501 ";
+			std::string err_message = prefix + _data->get_nickname(dest_fd) + " :Unknown MODE flag\r\n";
 			_data->write_outbuff(dest_fd, err_message);	
 		}
 		// 502
 		void	err_users_dontmatch(int dest_fd, const std::vector<std::string> args)
 		{
 			std::string	prefix = ":" + args[0] + " 502 ";
-			std::string err_message = prefix + ":Cannot change mode for other users\r\n";
+			std::string err_message = prefix + _data->get_nickname(dest_fd) + " :Cannot change mode for other users\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 		// 473
@@ -701,7 +701,7 @@ class	Command {
 		void	error_quit(int dest_fd, const std::vector<std::string>& args)
 		{
 			std::string	prefix = ":" + args[0];
-			std::string	err_message = prefix + " ERROR: Closing link: " + args[1];
+			std::string	err_message = prefix + " ERROR : Closing link: " + args[1];
 			if (args.size() == 3)
 			{
 				std::string	suffix = " (QUIT: " + args[2] + ")";
