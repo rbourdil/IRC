@@ -51,6 +51,7 @@ class	Command {
 		void	notice(int fd, const std::vector<std::string>& params);
 		void	kick(int fd, const std::string& channel, const std::string& user, const std::string& comment);
 		void	invite(int fd, const std::vector<std::string>& params);
+		void	who(int fd, const std::vector<std::string>& params);
 		void	whois(int fd, const std::vector<std::string>& params);
 		void	cap(int fd, const std::vector<std::string>& params);
 		void	ping(int fd, const std::vector<std::string>& params);
@@ -537,16 +538,15 @@ class	Command {
 		// 352
 		void	rpl_whoreply(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 352 " + _data->get_nickname(dest_fd) + " ";
-			std::string err_message = prefix + args[1] + " " + args[2] + " " + args[3] + " " + args[0] + " " + args[5];
-			err_message = err_message + "H@+: " + args[6] +  " " + args[7] + "\r\n";
+			std::string	prefix = ":" + args[0] + " 352 ";
+			std::string err_message = prefix + args[1] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 
 		// 315
 		void	rpl_endof_who(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 315 " + _data->get_nickname(dest_fd) + " ";
+			std::string	prefix = ":" + args[0] + " 315 ";
 			std::string err_message = prefix + args[1] + " :End of WHO list\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}

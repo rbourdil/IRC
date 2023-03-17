@@ -21,7 +21,8 @@ void	Command::pass(int fd, const std::vector<std::string>& params)
 			_args.push_back(_data->get_user_info(fd));
 			rpl_welcome_message(fd, _args);
 		}
-	} }
+	}
+}
 
 void	Command::nick(int fd, const std::vector<std::string>& params)
 {
@@ -198,8 +199,7 @@ void	Command::join(int fd, std::string channel, std::string key)
 	{
 		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
-		std::cout << "JOIN-errnosuchchannel" << std::endl;
-		err_nosuch_channel(fd, _args);
+		err_bad_chanmask(fd, _args);
 	}
 	else if (!key.empty() && !valid_key(key))
 	{
@@ -310,7 +310,6 @@ void	Command::part(int fd, const std::string& channel, const std::string& messag
 	{
 		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
-		std::cout << "PART-errnosuchchannel" << std::endl;
 		err_nosuch_channel(fd, _args);
 	}
 	else if (!_data->is_in_channel(fd, channel))
@@ -490,25 +489,34 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 				case 'k':
 				{
 					std::string	key = *itv++;
-					if (_data->check_channel_flags(channel, KEY_CFLAG))
-					{
-						_args.push_back(_data->get_srvname());
-						_args.push_back(channel);
-						err_keyset(fd, _args);
-					}
-					else if (!valid_key(key))
+					if (!valid_key(key))
 					{
 						_args.push_back(_data->get_srvname());
 						_args.push_back(key);
 						err_badchannel_key(fd, _args);
+					}
+					else if (_data->check_channel_flags(channel, KEY_CFLAG))
+					{
+						if (add)
+						{
+							_args.push_back(_data->get_srvname());
+							_args.push_back(channel);
+							err_keyset(fd, _args);
+						}
+						else if (key != _data->get_channel_key(channel))
+						{
+							_args.push_back(_data->get_srvname());
+							_args.push_back(key);
+							err_badchannel_key(fd, _args);
+						}
+						else
+							_data->unset_channel_flags(channel, KEY_CFLAG);
 					}
 					else if (add)
 					{
 						_data->set_channel_flags(channel, KEY_CFLAG);
 						_data->set_channel_key(channel, key);
 					}
-					else
-						_data->unset_channel_flags(channel, KEY_CFLAG);
 					break;
 				}
 				case 'l':
@@ -540,6 +548,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 						{
 							const std::set<std::string>&	ban_masks = _data->get_ban_masks(channel);
 							std::set<std::string>::const_iterator	itm = ban_masks.begin();
+							_args.push_back(_data->get_srvname());
 							_args.push_back(channel);
 							for (; itm != ban_masks.end(); ++itm)
 							{
@@ -571,6 +580,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 						{
 							const std::set<std::string>&	except_masks = _data->get_except_masks(channel);
 							std::set<std::string>::const_iterator	itm = except_masks.begin();
+							_args.push_back(_data->get_srvname());
 							_args.push_back(channel);
 							for (; itm != except_masks.end(); ++itm)
 							{
@@ -602,6 +612,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 						{
 							const std::set<std::string>&	invit_masks = _data->get_invit_masks(channel);
 							std::set<std::string>::const_iterator	itm = invit_masks.begin();
+							_args.push_back(_data->get_srvname());
 							_args.push_back(channel);
 							for (; itm != invit_masks.end(); ++itm)
 							{
@@ -870,7 +881,24 @@ void	Command::kick_dispatch(int fd, const std::vector<std::string>& params)
 			err_need_moreparams(fd, _args);
 		}
 	}
-	std::cerr << "OUT" << std::endl;
+}
+
+void	Command::who(int fd, const std::vector<std::string>& params)
+{
+	if (params.size() == 0 || params[0] == "0")
+	{
+		std::set<int>	users = _data->list_visible_users(fd);		
+		for (std::set<int>::const_iterator it = users.begin(); it != users.end(); ++it)
+		{
+			_args.push_back(_data->get_srvname());
+			_args.push_back(_data->get_who_string(*it));	
+			rpl_whoreply(fd, _args);
+			_args.clear();
+		}
+		_args.push_back(_data->get_srvname());
+		_args.push_back(_data->get_nickname(fd));
+		rpl_endof_who(fd, _args);
+	}
 }
 
 std::string	Command::user_mode_str(int fd)
@@ -921,6 +949,7 @@ Command::Command(Data* data) : _data(data)
 	_cmd_map.insert(std::make_pair("KICK", &Command::kick_dispatch));
 	_cmd_map.insert(std::make_pair("INVITE", &Command::invite));
 	_cmd_map.insert(std::make_pair("CAP", &Command::cap));
+	_cmd_map.insert(std::make_pair("WHO", &Command::who));
 	_cmd_map.insert(std::make_pair("WHOIS", &Command::whois));
 	_cmd_map.insert(std::make_pair("PING", &Command::ping));
 	_cmd_map.insert(std::make_pair("DIE", &Command::die));
