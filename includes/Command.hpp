@@ -401,7 +401,7 @@ class	Command {
 		// 367
 		void	rpl_ban_list(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 376 " + _data->get_nickname(dest_fd) + " ";
+			std::string	prefix = ":" + args[0] + " 376 ";
 			std::string err_message = prefix + args[1] + " " + args[2] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);	
 		}
@@ -409,7 +409,7 @@ class	Command {
 		// 348
 		void	rpl_except_list(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 348 " + _data->get_nickname(dest_fd) + " ";
+			std::string	prefix = ":" + args[0] + " 348 ";
 			std::string err_message = prefix + args[1] + " " + args[2] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);	
 		}
@@ -425,7 +425,7 @@ class	Command {
 		// 346
 		void	rpl_invite_list(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 346 " + _data->get_nickname(dest_fd) + " ";
+			std::string	prefix = ":" + args[0] + " 346 ";
 			std::string err_message = prefix + args[1] + " " + args[2] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);		
 		}
@@ -433,7 +433,7 @@ class	Command {
 		// 325
 		void	rpl_uniqops(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 325 " + _data->get_nickname(dest_fd) + " ";
+			std::string	prefix = ":" + args[0] + " 325 ";
 			std::string err_message = prefix + args[1] + " " + args[2] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);	
 		}
