@@ -136,7 +136,12 @@ void	Server::run()
 	while (1)
 	{
 		if (g_die == 1)
+		{
+			pfd_iter it = _pfds.begin();
+			for (; it != _pfds.end(); ++it)
+				close(it->fd);
 			return;
+		}
 		int poll_count = poll(&_pfds[0], _pfds.size(), TIMEOUT);
 
         // the poll call was interrupted by a signal, retry
@@ -207,6 +212,7 @@ void	Server::run()
 						{
 							irc_cmd	cmd = p.out();
 							exec.execute_cmd(_iter->fd, cmd);
+							
 						}
 						if (p.state() == VALID_CMD || p.state() == DUMP_CMD)
 							_data->reset_inbuff(_iter->fd);
