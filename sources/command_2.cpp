@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/17 23:47:30 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/17 23:59:05 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@ void	Command::cap(int fd, const std::vector<std::string>& params)
 
 void	Command::topic(int fd, const std::vector<std::string>& params)
 {
-	std::cout << "nani" << std::endl;
 	const bool isRegistered =  _data->is_registered(fd);
 	size_t p_size = params.size();
 	const bool notEnoughParams = p_size < 1;
@@ -63,16 +62,15 @@ void	Command::topic(int fd, const std::vector<std::string>& params)
 
 	if (isGetTopic) {
 		const std::string	topic = _data->get_channel_topic(channel);
+		_args.push_back(_data->get_srvname());
+		_args.push_back(channel);
+		
 		if (topic.empty())
 		{
-			_args.push_back(_data->get_srvname());
-			_args.push_back(channel);
 			rpl_notopic(fd, _args);
 		}
 		else
 		{
-			_args.push_back(_data->get_srvname());
-			_args.push_back(channel);
 			_args.push_back(topic);
 			rpl_topic(fd, _args);
 		}
