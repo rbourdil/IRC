@@ -386,7 +386,7 @@ class	Command {
 		// 221
 		void	rpl_umodeis(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 221 " + _data->get_nickname(dest_fd) + " ";
+			std::string	prefix = ":" + args[0] + " 221 ";
 			std::string err_message = prefix + args[1] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
