@@ -86,7 +86,7 @@ bool	valid_nickname(const std::string& nick)
 	if (!isalpha(*it) && !isspecial(*it))
 		return (false);
 	it++;
-	for (int count = 0; it != nick.end() && count < 8; it++)
+	for (int count = 0; it != nick.end() && count < 8; it++, count++)
 	{
 		if (!isdigit(*it) && !isalpha(*it) && !isspecial(*it) && *it != '-')
 			break ;
