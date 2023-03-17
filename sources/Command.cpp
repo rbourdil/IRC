@@ -341,30 +341,34 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 	const std::string	channel = params[0];
 	int					char_mode;
 
-	_args.push_back(_data->get_srvname());
 	if (!_data->channel_exists(channel))
 	{
+		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
 		err_nosuch_channel(fd, _args);
 	}
 	else if (channel[0] == '+')
 	{
+		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
 		err_nochan_modes(fd, _args);
 	}
 	else if (!_data->check_member_status(channel, fd, OPER_MFLAG))
 	{
+		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
 		err_chano_privsneeded(fd, _args);
 	}
 	else if (params.size() == 1) // if MODE <channel> alone, list modes
 	{
+		_args.push_back(_data->get_srvname());
 		_args.push_back(channel);
 		_args.push_back(_data->get_channel_flags_str(channel));
 		rpl_channel_modeis(fd, _args);	
 	}
 	else if ((char_mode = valid_channel_mode(params[1])) != 0)
 	{
+		_args.push_back(_data->get_srvname());
 		std::string	str_mode;
 		str_mode.push_back(char_mode);
 		_args.push_back(str_mode);
@@ -373,6 +377,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 	}
 	else if (!match_mode_params(params)) // check if there are enough params supplied to the flags
 	{
+		_args.push_back(_data->get_srvname());
 		_args.push_back("MODE");
 		err_need_moreparams(fd, _args);
 	}
@@ -381,7 +386,8 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 		std::vector<std::string>::const_iterator	itv = params.begin() + 2;
 		std::string									flags = params[1];
 		std::string::const_iterator					itf = flags.begin();
-		bool										add = true;
+		bool										add = true, mask_change = false;
+		int											prev_mode = _data->get_channel_mode(channel);
 
 		if (*itf == '+' || *itf == '-')
 		{
@@ -404,11 +410,10 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 					}
 					else
 					{
+						_args.push_back(_data->get_srvname());
 						_args.push_back(*itv++);
 						_args.push_back(channel);
 						err_usernot_inchannel(fd, _args);
-						_args.pop_back();
-						_args.pop_back();
 					}
 					break;
 				case 'v':
@@ -422,11 +427,10 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 					}
 					else
 					{
+						_args.push_back(_data->get_srvname());
 						_args.push_back(*itv++);
 						_args.push_back(channel);
 						err_usernot_inchannel(fd, _args);
-						_args.pop_back();
-						_args.pop_back();
 					}
 					break;
 				case 'a':
@@ -488,11 +492,13 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 					std::string	key = *itv++;
 					if (_data->check_channel_flags(channel, KEY_CFLAG))
 					{
+						_args.push_back(_data->get_srvname());
 						_args.push_back(channel);
 						err_keyset(fd, _args);
 					}
 					else if (!valid_key(key))
 					{
+						_args.push_back(_data->get_srvname());
 						_args.push_back(key);
 						err_badchannel_key(fd, _args);
 					}
@@ -528,6 +534,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 						{
 							_data->set_channel_flags(channel, BAN_MASK_CFLAG);
 							_data->add_ban_mask(channel, *itv++);
+							mask_change = true;
 						}
 						else
 						{
@@ -545,8 +552,10 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 					}
 					else
 					{
-						_data->unset_channel_flags(channel, BAN_MASK_CFLAG);
 						_data->remove_ban_mask(channel, *itv++);
+						if (_data->get_ban_masks(channel).size() == 0)
+							_data->unset_channel_flags(channel, BAN_MASK_CFLAG);
+						mask_change = true;
 					}
 					break;
 				case 'e':
@@ -556,6 +565,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 						{
 							_data->set_channel_flags(channel, EXCEPT_MASK_CFLAG);
 							_data->add_except_mask(channel, *itv++);
+							mask_change = true;
 						}
 						else
 						{
@@ -573,8 +583,10 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 					}
 					else
 					{
-						_data->unset_channel_flags(channel, EXCEPT_MASK_CFLAG);
 						_data->remove_except_mask(channel, *itv++);
+						if (_data->get_except_masks(channel).size() == 0)
+							_data->unset_channel_flags(channel, EXCEPT_MASK_CFLAG);
+						mask_change = true;
 					}
 					break;
 				case 'I':
@@ -584,6 +596,7 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 						{
 							_data->set_channel_flags(channel, INVIT_MASK_CFLAG);
 							_data->add_invit_mask(channel, *itv++);
+							mask_change = true;
 						}
 						else
 						{
@@ -602,19 +615,24 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 					}
 					else
 					{
-						_data->unset_channel_flags(channel, INVIT_MASK_CFLAG);
 						_data->remove_invit_mask(channel, *itv++);
+						if (_data->get_invit_masks(channel).size() == 0)
+							_data->unset_channel_flags(channel, INVIT_MASK_CFLAG);
+						mask_change = true;
 					}
 					break;
 			}
-			_args.erase(_args.begin() + 1, _args.end());
+			_args.clear();
 		}
-		_args.clear();
-		_args.push_back(_data->get_user_info(fd));
-		_args.insert(_args.end(), params.begin(), params.end());
-		std::vector<int>	members = _data->get_members_list_fd(channel);
-		for (std::vector<int>::iterator it = members.begin(); it != members.end(); ++it)
-			mode_channel_reply(*it, _args);
+		if (_data->get_channel_mode(channel) != prev_mode || mask_change)
+		{
+			_args.clear();
+			_args.push_back(_data->get_user_info(fd));
+			_args.insert(_args.end(), params.begin(), params.end());
+			std::vector<int>	members = _data->get_members_list_fd(channel);
+			for (std::vector<int>::iterator it = members.begin(); it != members.end(); ++it)
+				mode_channel_reply(*it, _args);
+		}
 	}
 }
 		

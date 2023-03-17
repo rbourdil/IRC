@@ -886,6 +886,16 @@ class	Data {
 			return (false);
 		}
 
+		int	get_channel_mode(const std::string& channel) const
+		{
+			channel_const_iterator	it = _channels.find(channel);
+
+			if (it != _channels.end())
+				return (it->second._mode);
+			else
+				throw std::runtime_error("get_channel_topic: channel name does not exist");
+		}
+
 		const std::string&	get_channel_topic(const std::string& channel) const
 		{
 			channel_const_iterator	it = _channels.find(channel);
