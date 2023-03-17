@@ -376,12 +376,12 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 		_args.push_back("MODE");
 		err_need_moreparams(fd, _args);
 	}
-	else // channel is regonized and there are flags
+	else // channel is recognized and there are flags
 	{
 		std::vector<std::string>::const_iterator	itv = params.begin() + 2;
-		std::string					flags = params[1];
-		std::string::const_iterator	itf = flags.begin();
-		bool						add = true;
+		std::string									flags = params[1];
+		std::string::const_iterator					itf = flags.begin();
+		bool										add = true;
 
 		if (*itf == '+' || *itf == '-')
 		{
@@ -609,6 +609,8 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 			}
 			_args.erase(_args.begin() + 1, _args.end());
 		}
+		_args.clear();
+		_args.push_back(_data->get_user_info(fd));
 	}
 }
 		
