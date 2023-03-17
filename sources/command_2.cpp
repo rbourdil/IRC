@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/17 14:31:17 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/17 23:47:30 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,90 +22,84 @@ void	Command::cap(int fd, const std::vector<std::string>& params)
 
 void	Command::topic(int fd, const std::vector<std::string>& params)
 {
-	if (_data->is_registered(fd))
+	std::cout << "nani" << std::endl;
+	const bool isRegistered =  _data->is_registered(fd);
+	size_t p_size = params.size();
+	const bool notEnoughParams = p_size < 1;
+	const bool hasTooManyParams = p_size > 2;
+	const bool paramsIsCorrect = !notEnoughParams && !hasTooManyParams;
+	const bool channelExist = isRegistered && paramsIsCorrect && _data->channel_exists(params[0]);
+	const bool isInChannel = channelExist && _data->is_in_channel(fd, params[0]);
+	const bool isGetTopic = isInChannel && p_size == 1;
+	const bool hasChannelPrivilege = isInChannel && _data->check_member_status(params[0], fd, OPER_MFLAG);
+	const bool needPrivilege = isInChannel && _data->check_channel_flags(params[0], TOPIC_OPER_CFLAG);
+	const bool canCreateTopic = hasChannelPrivilege || !needPrivilege;
+
+
+	if (!isRegistered)
 	{
-		size_t p_size = params.size();
-		if (p_size < 1)
+		_args.push_back(_data->get_srvname());
+		err_not_registered(fd, _args);
+		return;
+	}
+	if (!paramsIsCorrect) {
+		if (notEnoughParams)
 		{
 			_args.push_back(_data->get_srvname());
 			_args.push_back("TOPIC");
 			err_need_moreparams(fd, _args);
 		}
-		else if (p_size > 2)
-			return;
-		else
-		{
-			const std::string channel = params[0];
-			if (_data->channel_exists(channel) && _data->is_in_channel(fd, channel))
-			{
-				const std::string	topic = _data->get_channel_topic(channel);
-				if (p_size == 1)
-				{
-					if (topic.empty())
-					{
-						_args.push_back(_data->get_srvname());
-						_args.push_back(channel);
-						rpl_notopic(fd, _args);
-					}
-					else
-					{
-						_args.push_back(_data->get_srvname());
-						_args.push_back(channel);
-						_args.push_back(topic);
-						rpl_topic(fd, _args);
-					}
-				}
-				else
-				{
-					const std::string new_topic = params[1];
-					if (_data->check_channel_flags(channel, TOPIC_OPER_CFLAG))
-					{
-						if (_data->check_member_status(channel, fd, OPER_MFLAG))
-						{
-							_data->set_channel_topic(channel, new_topic);
-							_args.push_back(_data->get_user_info(fd));
-							_args.push_back(channel);
-							_args.push_back(new_topic);
-							std::vector<int>	members = _data->get_members_list_fd(channel);
-							for (std::vector<int>::iterator it = members.begin(); it != members.end(); it++)
-								topic_reply(*it, _args);
-						}
-						else
-						{
-							_args.push_back(_data->get_srvname());
-							_args.push_back(channel);
-							err_chano_privsneeded(fd, _args);
-						}
-					}
-					else
-					{
-						_data->set_channel_topic(channel, new_topic);
-						_args.push_back(_data->get_user_info(fd));
-						_args.push_back(channel);
-						_args.push_back(new_topic);
-						std::vector<int>	members = _data->get_members_list_fd(channel);
-						for (std::vector<int>::iterator it = members.begin(); it != members.end(); it++)
-							topic_reply(*it, _args);
-					}
-				}
-			}
-			else
-			{
-				_args.push_back(_data->get_srvname());
-				_args.push_back(channel);
-				err_noton_channel(fd, _args);
-			}
-		}
+		return;
 	}
-	else
+	if (!isInChannel) 
 	{
 		_args.push_back(_data->get_srvname());
-		err_not_registered(fd, _args);
+		_args.push_back(params[0]);
+		err_noton_channel(fd, _args);
+		return;
 	}
+	
+	const std::string channel = params[0];
+
+	if (isGetTopic) {
+		const std::string	topic = _data->get_channel_topic(channel);
+		if (topic.empty())
+		{
+			_args.push_back(_data->get_srvname());
+			_args.push_back(channel);
+			rpl_notopic(fd, _args);
+		}
+		else
+		{
+			_args.push_back(_data->get_srvname());
+			_args.push_back(channel);
+			_args.push_back(topic);
+			rpl_topic(fd, _args);
+		}
+		return;
+	}
+	if (!canCreateTopic)
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back(channel);
+		err_chano_privsneeded(fd, _args);
+		return;
+	}
+
+	const std::string new_topic = params[1];
+	_data->set_channel_topic(channel, new_topic);
+	_args.push_back(_data->get_user_info(fd));
+	_args.push_back(channel);
+	_args.push_back(new_topic);
+	std::vector<int>	members = _data->get_members_list_fd(channel);
+	for (std::vector<int>::iterator it = members.begin(); it != members.end(); it++)
+		topic_reply(*it, _args);
+
 }
 
 void	Command::names(int fd, const std::vector<std::string>& params)
 {
+	std::cout << "nani" << std::endl;
 	_args.push_back(_data->get_srvname());
 	int	p_size = params.size();
 	if (_data->is_registered(fd))
@@ -451,8 +445,29 @@ void	Command::invite(int fd, const std::vector<std::string>& params)
 
 void	Command::whois(int fd, const std::vector<std::string>& params)
 {
-	(void)fd;
-	(void)params;
+	if (_data->is_registered(fd))
+	{
+		int p_size = params.size();
+		if (p_size == 0)
+		{
+			_args.push_back(_data->get_srvname());
+			_args.push_back("WHOIS");
+			err_need_moreparams(fd, _args);
+		}
+		else
+		{
+			//who is with nickname
+				//if not joined a channel
+				//if it joined a channel
+		}
+	}
+	else
+	{
+		_args.push_back(_data->get_srvname());
+		_args.push_back("WHOIS");
+		err_not_registered(fd, _args);
+	}
+	
 }
 
 void	Command::ping(int fd, const std::vector<std::string>& params)
