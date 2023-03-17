@@ -372,7 +372,7 @@ class	Command {
 		void	rpl_welcome_message(int dest_fd, const std::vector<std::string> args)
 		{
 			std::string	prefix = ":" + args[0] + " 001 " + _data->get_nickname(dest_fd) + " ";
-			std::string err_message = prefix + args[1] + " :Welcome to the Internet Relay Network " + args[2] + "\r\n";
+			std::string err_message = prefix + ":Welcome to the Internet Relay Network " + args[2] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 

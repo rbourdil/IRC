@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/16 17:51:55 by rbourdil         ###   ########.fr       */
+/*   Updated: 2023/03/17 14:31:17 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -382,6 +382,7 @@ void	Command::invite(int fd, const std::vector<std::string>& params)
 										rpl_inviting(fd, _args);
 										std::string message = _data->get_user_info(fd) + " INVITE " + nickname + " " + channel + "\r\n";
 										send(dest_fd, message.c_str(), message.size(), 0);
+										_data->add_invit_mask(channel, nickname);
 									}
 								}
 							}
@@ -441,10 +442,8 @@ void	Command::invite(int fd, const std::vector<std::string>& params)
 				_args.push_back(nickname);
 				err_nosuch_nick(fd, _args);
 				return;
-			}
-			
+			}	
 		}
-		
 	}
 	else
 		err_not_registered(fd, _args);
@@ -1070,9 +1069,7 @@ void	Command::send_to_nick_notice(int fd, std::string &nick, std::string &messag
 {
 	int dest_fd = _data->get_user_fd(nick);
 	if (_data->check_user_flags(dest_fd, AWAY_UFLAG))
-	{
 		return;
-	}
 	else
 	{
 		_args.push_back(_data->get_user_info(fd));
