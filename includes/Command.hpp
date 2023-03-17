@@ -101,9 +101,18 @@ class	Command {
 		//451
 		void	err_not_registered(int dest_fd, const std::vector<std::string> args)
 		{
-				std::string	prefix = ":" + args[0] + " 451 " + _data->get_nickname(dest_fd) + " ";
+			if (_data->has_nickname(dest_fd))
+			{
+				std::string	prefix = ":" + args[0] + " 451 " + _data->get_nickname(dest_fd) +  " " + args[1] + " ";
 				std::string err_message = prefix + ":You have not registered\r\n";
 				_data->write_outbuff(dest_fd, err_message);		
+			}
+			else
+			{
+				std::string	prefix = ":" + args[0] + " 451 " + args[1] + " ";
+				std::string err_message = prefix + ":You have not registered\r\n";
+				_data->write_outbuff(dest_fd, err_message);		
+			}
 		}
 
 		//431

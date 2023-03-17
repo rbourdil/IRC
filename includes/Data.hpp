@@ -598,6 +598,18 @@ class	Data {
 			return (false);
 		}
 
+		bool	has_nickname(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+			if (it != _clients.end())
+			{
+				if(!it->second._nickname.empty())
+					return true;
+				return false;
+			}
+			return false;
+		}
+
 		const std::string&	get_nickname(int fd) const
 		{
 			client_const_iterator	it = _clients.find(fd);
