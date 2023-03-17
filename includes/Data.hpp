@@ -356,7 +356,7 @@ class	Data {
 			if (it != _channels.end())
 			{
 				it->second._members.erase(fd);
-				if (it->second._members.size() == 0)
+				if (it->second._members.size() == 0 && channel[0] != '!')
 					_channels.erase(it);
 			}
 		}
@@ -548,7 +548,6 @@ class	Data {
 
 		int		user_is_unique(std::string &user)
 		{
-			std::cout << "user_is_unique: user is: " << user << std::endl;
 			std::map<int, Client>::iterator  it = _clients.begin();
 			std::pair<std::set<std::string>::iterator,bool> ret;
 			int	repeat = 0;
@@ -580,6 +579,20 @@ class	Data {
 			{
 				if ((it->second._mode & INVISIBLE_UFLAG) == 0)
 					users.push_back(it->second._nickname);
+			}
+			return (users);
+		}
+
+		std::set<int>	list_visible_users(int fd) const
+		{
+			std::set<int>				users;
+			std::set<int>				friends = get_friends(fd);
+			client_const_iterator		it = _clients.find(fd);
+
+			for (; it != _clients.end(); it++)
+			{
+				if (((it->second._mode & INVISIBLE_UFLAG) == 0) && (friends.find(it->first) == friends.end()))
+					users.insert(it->first);
 			}
 			return (users);
 		}
@@ -712,6 +725,49 @@ class	Data {
 			}
 			else
 				throw std::runtime_error("get_user_info: no account registered with this file descriptor");
+		}	
+
+		std::string	get_who_string(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+			{
+				std::string	who_string;
+				if (!(it->second._channels.empty()))
+					who_string += *(it->second._channels.begin());
+				else
+					who_string += "*";
+				who_string += " ";
+				who_string += it->second._username;
+				who_string += " ";
+				who_string += it->second._hostname;
+				who_string += " ";
+				who_string += _srvname;
+				who_string += " ";
+				who_string += it->second._nickname;
+				if (it->second._mode & AWAY_UFLAG)
+					who_string += " G";
+				else
+					who_string += " H";
+				if (it->second._mode & OPER_UFLAG)
+					who_string += " *";
+				if (!(it->second._channels.empty()))
+				{
+					if (check_member_status(*(it->second._channels.begin()), fd, CREATOR_MFLAG))
+						who_string += " +";
+					else if (check_member_status(*(it->second._channels.begin()), fd, OPER_MFLAG))
+						who_string += " @";
+				}
+				who_string += " ";
+				who_string += get_user_flags_str(fd);
+				who_string += " ";
+				who_string += ":0 ";
+				who_string += it->second._realname;
+				return (who_string);
+			}
+			else
+				throw std::runtime_error("get_who_string: no account registered with this file descriptor");
 		}	
 
 		bool	check_user_state(int fd, int state) const
