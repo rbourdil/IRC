@@ -42,6 +42,7 @@ void	Command::nick(int fd, const std::vector<std::string>& params)
 		err_restricted(fd, _args);
 	else
 	{
+		_data->remove_nickname(fd);
 		_data->add_nickname(fd, params[0]);
 		_data->set_user_state(fd, NICK_VALID);
 		if (_data->is_registered(fd))

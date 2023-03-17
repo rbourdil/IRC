@@ -230,6 +230,16 @@ class	Data {
 			}
 		}
 
+		void	remove_nickname(int fd)
+		{
+			client_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+			{
+				_nick_to_fd.erase(it->second._nickname);
+			}
+		}
+
 		void	add_username(int fd, const std::string& nick)
 		{
 			client_iterator	it = _clients.find(fd);

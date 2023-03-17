@@ -176,6 +176,12 @@ void	Server::run()
 					close(_iter->fd);
 					_iter = _pfds.erase(_iter);
 				}
+				else if ((count + _data->get_inbuff(_iter->fd).size()) > BUFSIZE)
+				{
+					std::cerr << "Client from socket: " << _iter->fd << " has overflown its buffer." << std::endl;
+					_data->reset_inbuff(_iter->fd);
+					++_iter;
+				}
 				else
 				{
 					_data->set_user_last_move(_iter->fd);
