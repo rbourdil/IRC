@@ -611,6 +611,10 @@ void	Command::channel_mode(int fd, const std::vector<std::string>& params)
 		}
 		_args.clear();
 		_args.push_back(_data->get_user_info(fd));
+		_args.insert(_args.end(), params.begin(), params.end());
+		std::vector<int>	members = _data->get_members_list_fd(channel);
+		for (std::vector<int>::iterator it = members.begin(); it != members.end(); ++it)
+			mode_channel_reply(*it, _args);
 	}
 }
 		

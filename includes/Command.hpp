@@ -703,6 +703,19 @@ class	Command {
 			_data->write_outbuff(dest_fd, err_message);
 		}
 
+		void	mode_channel_reply(int dest_fd, const std::vector<std::string>& args)
+		{
+			std::string	prefix = ":" + args[0];
+			std::string	err_message = prefix + " MODE " + args[1] + " " + args[2];
+			if (args.size() > 3)
+			{
+				err_message += ":";
+				for (size_t i = 3; i < args.size(); i++)
+					err_message += " " + args[i];
+			}
+			err_message += "\r\n";
+			_data->write_outbuff(dest_fd, err_message);
+		}
 
 		// OTHER ERRORS
 
