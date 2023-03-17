@@ -77,7 +77,7 @@ class	Command {
 
 		void	err_unknown_command(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 421 " + _data->get_nickmame(dest_fd) + " ";
+			std::string	prefix = ":" + args[0] + " 421 " + _data->get_nickname(dest_fd) + " ";
 			std::string err_message = prefix + args[1] + " :Unknown command\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
@@ -85,7 +85,7 @@ class	Command {
 		//461
 		void	err_need_moreparams(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 461 " + _data->get_nickmame(dest_fd) + " ";
+			std::string	prefix = ":" + args[0] + " 461 " + _data->get_nickname(dest_fd) + " ";
 			std::string err_message = prefix + args[1] + " :Not enough parameters\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
