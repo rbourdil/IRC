@@ -231,8 +231,9 @@ void	Command::join(int fd, std::string channel, std::string key)
 		_args.push_back(channel);
 		join_reply(fd, _args);
 		_args[0] = _data->get_srvname();
-		rpl_notopic(fd, _args);
-		_args[1] = "=" + channel;
+		//rpl_notopic(fd, _args);
+		_args[1] = "=";
+		_args.push_back(channel);
 		std::string	nick = _data->get_nickname(fd);
 		if (_data->check_member_status(channel, fd, OPER_MFLAG))
 			nick.insert(0, "@");
@@ -240,6 +241,9 @@ void	Command::join(int fd, std::string channel, std::string key)
 			nick.insert(0, "+");
 		_args.push_back(nick);
 		rpl_nam_reply(fd, _args);
+		_args.erase(_args.begin() + 1, _args.end());
+		_args.push_back(channel);
+		rpl_endof_names(fd, _args);
 	}
 	else if (_data->check_channel_flags(channel, INVITE_ONLY_CFLAG) && !_data->match_invit_masks(fd, channel))
 	{
@@ -277,6 +281,7 @@ void	Command::join(int fd, std::string channel, std::string key)
 			join_reply(*it, _args);
 		_args[0] = _data->get_srvname();
 		std::string	topic = _data->get_channel_topic(channel);
+		/*
 		if (!topic.empty())
 		{
 			_args.push_back(topic);
@@ -285,12 +290,14 @@ void	Command::join(int fd, std::string channel, std::string key)
 		}
 		else
 			rpl_notopic(fd, _args);
+		*/
 		if (_data->check_channel_flags(channel, PRIVATE_CFLAG))
-			_args[1] = "*" + channel;
+			_args[1] = "*";
 		else if (_data->check_channel_flags(channel, SECRET_CFLAG))
-			_args[1] = "@" + channel;
+			_args[1] = "@";
 		else
-			_args[1] = "=" + channel;
+			_args[1] = "=";
+		_args.push_back(channel);
 		for (it = members_fd.begin(); it != members_fd.end(); it++)
 		{
 			std::string	nick = _data->get_nickname(*it);
@@ -301,6 +308,9 @@ void	Command::join(int fd, std::string channel, std::string key)
 			_args.push_back(nick);
 		}
 		rpl_nam_reply(fd, _args);
+		_args.erase(_args.begin() + 1, _args.end());
+		_args.push_back(channel);
+		rpl_endof_names(fd, _args);
 	}
 }
 

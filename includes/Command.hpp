@@ -487,11 +487,11 @@ class	Command {
 		void	rpl_nam_reply(int dest_fd, const std::vector<std::string> args)
 		{
 			std::string	prefix = ":" + args[0] + " 353 " + _data->get_nickname(dest_fd) + " ";
-			std::string err_message = prefix + args[1] + " :";
+			std::string err_message = prefix + args[1] + " " + args[2] + " :";
 			if (args.size() > 2)
 			{
-				err_message = err_message + args[2];
-				for (size_t i = 3; i < args.size(); i++)
+				err_message = err_message + args[3];
+				for (size_t i = 4; i < args.size(); i++)
 					err_message = err_message + " " + args[i];
 			}
 			err_message = err_message +" \r\n";
@@ -502,7 +502,7 @@ class	Command {
 		void	rpl_endof_names(int dest_fd, const std::vector<std::string> args)
 		{
 			std::string	prefix = ":" + args[0] + " 366 " + _data->get_nickname(dest_fd) + " ";
-			std::string err_message = prefix + args[1] + " :End of NAMES list\r\n";
+			std::string err_message = prefix + args[1] + " :End of /NAMES list\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 
@@ -709,7 +709,7 @@ class	Command {
 		void	pong_reply(int dest_fd, const std::vector<std::string>& args)
 		{
 			std::string	prefix = ":" + args[0];
-			std::string	err_message = prefix + " PONG " + args[1] + " " + args[2] + "\r\n";
+			std::string	err_message = prefix + " PONG " + args[1] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 

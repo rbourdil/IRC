@@ -17,6 +17,12 @@ void	parser::get_params(void)
 	while ((nb_of_params() < 14 && _current == ' ') && !_panic)
 	{
 		match(' ');
+		if (_current == ' ' || _current == '\r')
+		{
+			if (_current == '\r')
+				break;
+			continue;
+		}
 		if (_current == ':')
 		{
 			match(':');
@@ -25,10 +31,14 @@ void	parser::get_params(void)
 		}
 		update_params();
 		match(WORD_TOKEN);
-	} if (nb_of_params() == 14 && _current == ' ') { match(' ');
+	}
+	if (nb_of_params() == 14 && _current == ' ')
+	{
+		match(' ');
 		if (_current == ':')
 			match(':');
-		get_trailing(); }
+		get_trailing();
+	}
 }
 
 void	parser::get_trailing(void)

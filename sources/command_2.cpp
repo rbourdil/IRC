@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/20 17:53:02 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/20 18:49:37 by rbourdil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -578,13 +578,7 @@ void	Command::ping(int fd, const std::vector<std::string>& params)
 		err_need_moreparams(fd, _args);
 		return;
 	}
-	if ((params[0] != _data->get_hostname(fd)))
-	{
-		err_noorigin(fd, _args);
-		return;
-	}
-	_args.push_back(_data->get_srvname());
-	_args.push_back(_data->get_hostname(fd));
+	_args.push_back(params[0]);
 	pong_reply(fd, _args);
 }
 
