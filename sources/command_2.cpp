@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/19 19:18:34 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/20 16:03:33 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -802,6 +802,7 @@ int		Command::parse_target(int fd, std::string &target)
 			return -1;
 		}
 	}
+	return -1;
 }
 
 void	Command::send_to_chan(int fd, std::string &channel, std::string &message)
@@ -1079,6 +1080,7 @@ int		Command::parse_target_notice(std::string &target)
 		else
 			return -1;
 	}
+	return -1;
 }
 
 void	Command::send_to_chan_notice(int fd, std::string &channel, std::string &message)
