@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/20 16:03:33 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/20 17:53:02 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -523,14 +523,6 @@ void	Command::whois(int fd, const std::vector<std::string>& params)
 	const bool isRegistered =  _data->is_registered(fd);
 	int p_size = params.size();
 	const bool enoughParams = p_size > 0;
-	const bool onlyNickname = p_size == 1;
-	const bool hasTarget = p_size >= 2;
-	const bool onlyNicknameValid = onlyNickname && _data->nickname_exists(params[1]);
-	const bool isValidTarget = hasTarget && (_data->get_srvname() == params[0]);
-	const bool hasTargetValidNickname = hasTarget && _data->nickname_exists(params[1]);
-	const bool validTargetInvalidNickname = isValidTarget && !hasTargetValidNickname;
-	const bool invalidTargetInvalidNickname = !isValidTarget && !hasTargetValidNickname;
-	
 	_args.push_back(_data->get_srvname());
 	if (!isRegistered)
 	{
@@ -544,63 +536,37 @@ void	Command::whois(int fd, const std::vector<std::string>& params)
 		err_need_moreparams(fd, _args);
 		return;
 	}
-	if (!onlyNicknameValid)
-	{
-		_args.push_back(params[0]);
-		err_nosuch_nick(fd, _args);
-		rpl_endof_whois(fd, _args);
-		return ;
-	}
-	if (invalidTargetInvalidNickname)
-	{
-		_args.push_back(params[0]);
-		err_nosuch_server(fd, _args);
-		return ;
-	}
-	if (validTargetInvalidNickname)
-	{
-		_args.push_back(params[1]);
-		err_nosuch_nick(fd, _args);
-		rpl_endof_whois(fd, _args);
-		return ;
-	}
-	_args.push_back(_data->get_username(fd));
-	_args.push_back(_data->get_hostname(fd));
-	_args.push_back(_data->get_realname(fd));
-	rpl_whois_user(fd, _args);
-	_args.erase(_args.begin() + 1, _args.end());
-	bool in_chans = _data->user_channel_count(fd);
-	if (in_chans)
-	{
-		std::set<std::string>	channels = _data->get_channels_of_user(fd);
-		std::set<std::string>::const_iterator it = channels.begin();
-		for (; it != channels.end() ; ++it)
-		{
-			std::string chan_name = *it;
-			if (_data->check_member_status(*it, fd, OPER_MFLAG))
-				_args.push_back("@" +*it);
-			else if (_data->check_member_status(*it, fd, VOICE_MFLAG))
-				_args.push_back("+" +*it);
-			else
-				_args.push_back(*it);
-		}
-		rpl_whois_channel(fd, _args);
-	}
-	_args.erase(_args.begin() + 1, _args.end());
-	_args.push_back("I am an IRC server made by rbourdil and pcamaren");
-	rpl_whois_server(fd, _args);
-	_args.pop_back();
-	//whoisiddle
-	if (_data->check_user_flags(fd, OPER_UFLAG))
-		rpl_whois_operator(fd, _args);
+	const bool onlyNickname = p_size == 1;
+	const bool hasTarget = p_size >= 2;
 	if (onlyNickname)
 	{
-		_args.push_back(params[0]);
-		rpl_endof_whois(fd, _args);
+		if (!_data->nickname_exists(params[0]))
+		{
+			_args.push_back(params[0]);
+			err_nosuch_nick(fd, _args);
+			rpl_endof_whois(fd, _args);
+			return ;
+		}
+		valid_whois(fd, params[0]);
 		return;
 	}
-	_args.push_back(params[1]);
-	rpl_endof_whois(fd, _args);
+	if (hasTarget)
+	{
+		if (!(_data->get_srvname() == params[0]))
+		{
+			_args.push_back(params[0]);
+			err_nosuch_server(fd, _args);
+			return ;
+		}
+		if (!_data->nickname_exists(params[1]))
+		{
+			_args.push_back(params[1]);
+			err_nosuch_nick(fd, _args);
+			rpl_endof_whois(fd, _args);
+			return ;
+		}
+		valid_whois(fd, params[1]);
+	}
 }
 
 void	Command::ping(int fd, const std::vector<std::string>& params)
@@ -636,6 +602,52 @@ void	Command::die(int fd, const std::vector<std::string>& params)
 }
 
 /*---------------------------HELPER FUNCTIONS---------------------------------*/
+
+void	Command::valid_whois(int fd, const std::string& nickname)
+{
+	_args.push_back(_data->get_username(fd));
+	_args.push_back(_data->get_hostname(fd));
+	_args.push_back(_data->get_realname(fd));
+	rpl_whois_user(fd, _args);
+	_args.erase(_args.begin() + 1, _args.end());
+	bool in_chans = _data->user_channel_count(fd);
+	if (in_chans)
+	{
+		std::set<std::string>	channels = _data->get_channels_of_user(fd);
+		std::set<std::string>::const_iterator it = channels.begin();
+		for (; it != channels.end() ; ++it)
+		{
+			std::string chan_name = *it;
+			if (_data->check_member_status(*it, fd, OPER_MFLAG))
+				_args.push_back("@" +*it);
+			else if (_data->check_member_status(*it, fd, VOICE_MFLAG))
+				_args.push_back("+" +*it);
+			else
+				_args.push_back(*it);
+		}
+		rpl_whois_channel(fd, _args);
+	}
+	_args.erase(_args.begin() + 1, _args.end());
+	_args.push_back("I am an IRC server made by rbourdil and pcamaren");
+	rpl_whois_server(fd, _args);
+	_args.pop_back();
+	std::stringstream s;
+	std::string _time;
+	double time_diff = difftime(std::time(NULL), _data->get_user_last_move(fd));
+	s << time_diff;
+	_time = s.str();
+	_args.push_back(_time);
+	long int creation_time = static_cast<long int> (_data->get_creation_time(fd));
+	s << creation_time;
+	_time = s.str();
+	_args.push_back(_time);
+	rpl_whois_idle(fd, _args);
+	_args.erase(_args.begin() + 1, _args.end());
+	if (_data->check_user_flags(fd, OPER_UFLAG))
+		rpl_whois_operator(fd, _args);
+	_args.push_back(nickname);
+	rpl_endof_whois(fd, _args);
+}
 
 int		Command::parse_target(int fd, std::string &target)
 {

@@ -72,6 +72,7 @@ class	Command {
 		bool	is_valid_host(std::string &host);
 		void	list_visible_channels(int fd);
 		void	list_channel_users(int fd, const std::string& channel_name);
+		void	valid_whois(int fd, const std::string& nickname);
 		
 		std::string	channel_mode_str(const std::string& channel);
 		std::string	user_mode_str(int fd);
@@ -581,8 +582,9 @@ class	Command {
 		// 317
 		void	rpl_whois_idle(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 317 " + _data->get_nickname(dest_fd) + " ";
-			std::string err_message = prefix + args[1] + " " + args[2] + " :seconds idle\r\n";
+			const std::string& nickname = _data->get_nickname(dest_fd);
+			std::string	prefix = ":" + args[0] + " 317 " + nickname + " ";
+			std::string err_message = prefix + nickname + " " + args[1] + " " + args[2] + " :seconds idle, signon time\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 

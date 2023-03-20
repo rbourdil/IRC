@@ -57,6 +57,7 @@ struct	Client {
 	std::set<std::string>		_channels;
 	int							_mode;
 	
+	time_t						_creation_time;
 	time_t						_last_move;
 	time_t						_last_pong;
 	bool						_was_ping;
@@ -64,7 +65,7 @@ struct	Client {
 	std::string					_in_buff;
 	std::string					_out_buff;
 
-	Client(const std::string& hostname, const std::string& hostaddress) : _state(UNREGISTERED_STATE), _hostname(hostname), _hostaddress(hostaddress), _mode(0), _last_move(std::time(NULL)), _was_ping(false) { }
+	Client(const std::string& hostname, const std::string& hostaddress) : _state(UNREGISTERED_STATE), _hostname(hostname), _hostaddress(hostaddress), _mode(0), _creation_time(std::time(NULL)), _last_move(std::time(NULL)), _was_ping(false) { }
 
 };
 
@@ -513,6 +514,16 @@ class	Data {
 				return (it->second._realname);
 			else
 				throw std::runtime_error("get_realname: no account registered with this file descriptor");
+		}
+
+		time_t get_creation_time(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+				return (it->second._creation_time);
+			else
+				throw std::runtime_error("get_creation_time: no account registered with this file descriptor");
 		}
 
 		bool	user_in_channels(int fd)
