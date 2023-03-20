@@ -495,6 +495,34 @@ class	Data {
 				throw std::runtime_error("get_outbuff: no account registered with this file descriptor");
 		}
 
+		const std::string& get_username(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+				return (it->second._username);
+			else
+				throw std::runtime_error("get_username: no account registered with this file descriptor");
+		}
+
+			const std::string& get_realname(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+
+			if (it != _clients.end())
+				return (it->second._realname);
+			else
+				throw std::runtime_error("get_realname: no account registered with this file descriptor");
+		}
+
+		bool	user_in_channels(int fd)
+		{
+			client_const_iterator	it = _clients.find(fd);
+			if (it->second._channels.size())
+				return true;
+			return false;
+		}
+
 		bool	comp_oper_name(const std::string& name)
 		{
 			return (name == _oper_name);
@@ -512,6 +540,16 @@ class	Data {
 				return it->second._was_ping;
 			else
 				throw std::runtime_error("get_user_was_ping: no account registered with this file descriptor");
+		}
+
+		std::set<std::string>	get_channels_of_user(int fd)
+		{
+			client_const_iterator	it = _clients.find(fd);
+			if (it != _clients.end())
+				return it->second._channels;
+			else
+				throw std::runtime_error("get_user_last_move: no account registered with this file descriptor");
+
 		}
 		
 		time_t				get_user_last_move(int fd) const
@@ -609,6 +647,18 @@ class	Data {
 			if (it != _nick_to_fd.end())
 				return (true);
 			return (false);
+		}
+
+		bool	has_nickname(int fd) const
+		{
+			client_const_iterator	it = _clients.find(fd);
+			if (it != _clients.end())
+			{
+				if(!it->second._nickname.empty())
+					return true;
+				return false;
+			}
+			return false;
 		}
 
 		const std::string&	get_nickname(int fd) const

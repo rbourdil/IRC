@@ -70,6 +70,8 @@ class	Command {
 		void	send_to_chan_notice(int fd, std::string &channel, std::string &message);
 		void	send_to_nick_notice(int fd, std::string &nick, std::string &message);
 		bool	is_valid_host(std::string &host);
+		void	list_visible_channels(int fd);
+		void	list_channel_users(int fd, const std::string& channel_name);
 		
 		std::string	channel_mode_str(const std::string& channel);
 		std::string	user_mode_str(int fd);
@@ -102,9 +104,18 @@ class	Command {
 		//451
 		void	err_not_registered(int dest_fd, const std::vector<std::string> args)
 		{
-				std::string	prefix = ":" + args[0] + " 451 " + _data->get_nickname(dest_fd) + " ";
+			if (_data->has_nickname(dest_fd))
+			{
+				std::string	prefix = ":" + args[0] + " 451 " + _data->get_nickname(dest_fd) +  " " + args[1] + " ";
 				std::string err_message = prefix + ":You have not registered\r\n";
 				_data->write_outbuff(dest_fd, err_message);		
+			}
+			else
+			{
+				std::string	prefix = ":" + args[0] + " 451 " + args[1] + " ";
+				std::string err_message = prefix + ":You have not registered\r\n";
+				_data->write_outbuff(dest_fd, err_message);		
+			}
 		}
 
 		//431
@@ -545,8 +556,10 @@ class	Command {
 		// 311
 		void	rpl_whois_user(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 311 " + _data->get_nickname(dest_fd) + " ";
-			std::string err_message = prefix + args[1] + args[2] + args[3] + args[4] + " * :" + args[5] + "\r\n";
+			std::string nickname = _data->get_nickname(dest_fd);
+			std::string	prefix = ":" + args[0] + " 311 " + nickname + " ";
+			std::string err_message = prefix + nickname + " " \
+			+ args[1] + " " + args[2] + " * :" + args[4] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 
@@ -554,15 +567,15 @@ class	Command {
 		void	rpl_whois_channel(int dest_fd, const std::vector<std::string> args)
 		{
 			std::string	prefix = ":" + args[0] + " 319 " + _data->get_nickname(dest_fd) + " ";
-			std::string err_message = prefix + args[1] + ":";
-			if (args.size() > 2)
+			std::string rpl_message = prefix + _data->get_nickname(dest_fd) + " :";
+			if (args.size() > 1)
 			{
-				err_message = err_message + args[2];
-				for (size_t i = 3; i < args.size() ; i++)
-					err_message = err_message + args[1];
+				rpl_message = rpl_message + args[1];
+				for (size_t i = 2; i < args.size() ; i++)
+					rpl_message = rpl_message + args[i];
 			}
-			err_message = err_message + "\r\n";
-			_data->write_outbuff(dest_fd, err_message);
+			rpl_message = rpl_message + "\r\n";
+			_data->write_outbuff(dest_fd, rpl_message);
 		}
 
 		// 317
@@ -584,16 +597,18 @@ class	Command {
 		// 312
 		void	rpl_whois_server(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 312 " + _data->get_nickname(dest_fd) + " ";
-			std::string err_message = prefix + args[1] + " " + args[0] + " :" + args[2] + "\r\n";
+			std::string nickname = _data->get_nickname(dest_fd);
+			std::string	prefix = ":" + args[0] + " 312 " + nickname + " ";
+			std::string err_message = prefix + nickname + " " + args[0] + " :" + args[1] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 
 		// 313
 		void	rpl_whois_operator(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 313 " + _data->get_nickname(dest_fd) + " ";
-			std::string err_message = prefix + args[1] + " :is an IRC operator\r\n";
+			const std::string& nickname = _data->get_nickname(dest_fd);
+			std::string	prefix = ":" + args[0] + " 313 " + nickname + " ";
+			std::string err_message = prefix + nickname + " :is an IRC operator\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 
