@@ -895,10 +895,52 @@ void	Command::who(int fd, const std::vector<std::string>& params)
 			rpl_whoreply(fd, _args);
 			_args.clear();
 		}
-		_args.push_back(_data->get_srvname());
-		_args.push_back(_data->get_nickname(fd));
-		rpl_endof_who(fd, _args);
 	}
+	else if (_data->nickname_exists(params[0]))
+	{
+		int	user_fd = _data->get_user_fd(params[0]);
+		if (!_data->check_user_flags(user_fd, INVISIBLE_UFLAG))
+		{
+			_args.push_back(_data->get_srvname());
+			_args.push_back(_data->get_who_string(user_fd));
+			rpl_whoreply(fd, _args);
+			_args.clear();
+		}
+	}
+	else if (_data->channel_exists(params[0]))
+	{
+		if (!_data->check_channel_flags(params[0], SECRET_CFLAG))
+		{
+			std::vector<int>	members = _data->get_members_list_fd(params[0]);
+			for (std::vector<int>::iterator it = members.begin(); it != members.end(); ++it)
+			{
+				if (!_data->check_user_flags(*it, INVISIBLE_UFLAG))
+				{
+					_args.push_back(_data->get_srvname());
+					_args.push_back(_data->get_who_string(*it));
+					rpl_whoreply(fd, _args);
+					_args.clear();
+				}
+			}
+		}
+	}
+	else
+	{
+		std::set<int>	users = _data->list_visible_users(fd);
+		for (std::set<int>::const_iterator it = users.begin(); it != users.end(); ++it)
+		{
+			if (match_mask(_data->get_user_info(*it), params[0]))
+			{
+				_args.push_back(_data->get_srvname());
+				_args.push_back(_data->get_who_string(*it));	
+				rpl_whoreply(fd, _args);
+				_args.clear();
+			}
+		}
+	}
+	_args.push_back(_data->get_srvname());
+	_args.push_back(_data->get_nickname(fd));
+	rpl_endof_who(fd, _args);
 }
 
 std::string	Command::user_mode_str(int fd)

@@ -587,7 +587,7 @@ class	Data {
 		{
 			std::set<int>				users;
 			std::set<int>				friends = get_friends(fd);
-			client_const_iterator		it = _clients.find(fd);
+			client_const_iterator		it = _clients.begin();
 
 			for (; it != _clients.end(); it++)
 			{

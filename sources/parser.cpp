@@ -215,13 +215,13 @@ bool	match_mask(const std::string& user_info, const std::string& mask)
 	{
 		if (*itmask == '*')
 		{
-			while (itmask != mask.end() && *itmask++ == '*')
-				;
+			while (itmask != mask.end() && *itmask == '*')
+				itmask++;
 			if (itmask == mask.end())
 				return (true);
 			else
 			{
-				while (*ituser != *itmask)
+				while (ituser != user_info.end() && *ituser != *itmask)
 					ituser++;
 			}
 		}
