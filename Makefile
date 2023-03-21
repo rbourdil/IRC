@@ -13,7 +13,6 @@ FLAGS	= -Wall -Wextra -Werror -std=c++98
 
 SRCS	= $(wildcard ./sources/*.cpp)
 INCS    = $(wildcard ./includes/*.hpp) $(wildcard ./includes/*/*.hpp)
-# INCS	= $(wildcard ./includes/*.hpp)
 
 INCPATH = -I./includes -I.
 OBJ_DIR	= obj

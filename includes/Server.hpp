@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/17 10:46:52 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/17 10:46:54 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/21 12:51:30 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,8 @@ class Server
 	int			receive_send_data(pfd_iter iter);
 	int			receive_data(pfd_iter iter, int *numbytes);
 	void		ping(int fd);
+
+	bool		handle_timeout_status(pfd_iter _iter);
 	pfd_iter	handle_timeout(pfd_iter _iter);
 	pfd_iter	disconnect_user(pfd_iter iter);
 

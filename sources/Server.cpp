@@ -91,6 +91,7 @@ pfd_iter	Server::handle_timeout(pfd_iter _iter)
 
 	if ((!_data->get_user_was_ping(_iter->fd)) && time_diff > PING_TIME && time_diff < DISCONNECT_TIME)
 	{
+		std::cout << "here" << std::endl;
 		ping(_iter->fd);
 		_data->set_user_last_pong(_iter->fd);
 		++_iter;
@@ -101,6 +102,25 @@ pfd_iter	Server::handle_timeout(pfd_iter _iter)
 		++_iter;
 	return (_iter);
 }
+
+bool		Server::handle_timeout_status(pfd_iter _iter)
+{
+	double time_diff = difftime(std::time(NULL), _data->get_user_last_move(_iter->fd));
+	double pong_diff = difftime(std::time(NULL), _data->get_user_last_pong(_iter->fd));
+
+	if ((!_data->get_user_was_ping(_iter->fd)) && time_diff > PING_TIME && time_diff < DISCONNECT_TIME)
+	{
+		std::cout << "here" << std::endl;
+		ping(_iter->fd);
+		_data->set_user_last_pong(_iter->fd);
+		return false;
+	}
+	else if (_data->get_user_was_ping(_iter->fd) && pong_diff > PONG_TIME)
+		return true;
+	else
+		return false;
+}
+
 
 pfd_iter Server::disconnect_user(pfd_iter iter)
 {
@@ -117,7 +137,7 @@ void	Server::ping(int fd)
 {
 	_data->set_user_was_ping(fd, true);
 	std::string ping_message = "PING :" + _data->get_srvname() + "\n";
-	send(fd, ping_message.c_str(), ping_message.size(), 0);
+	_data->write_outbuff(fd, ping_message);
 }
 
 
@@ -147,7 +167,6 @@ void	Server::run()
         // the poll call was interrupted by a signal, retry
 		if (errno == EINTR)
         	continue;
-
 		if (poll_count == -1)
 		{
 			perror("poll:");
@@ -168,6 +187,7 @@ void	Server::run()
 			}
 			if ( _iter->revents & POLLIN)
 			{
+				std::cout << "is POLLIN" << std::endl;
 				ssize_t	count = recv(_iter->fd, buff, BUFSIZE, 0);
 				if (count < 0)
 				{
@@ -236,6 +256,12 @@ void	Server::run()
 			}
 			else if (_iter->revents & POLLOUT)
 			{
+				bool to_disconnect = handle_timeout_status(_iter);
+				if (to_disconnect)
+				{
+					_iter = disconnect_user(_iter);
+					continue;
+				}
 				std::string	out = _data->flush_outbuff(_iter->fd, BUFSIZE);
 				if (out.size() != 0)
 				{
