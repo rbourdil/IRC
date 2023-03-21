@@ -807,21 +807,20 @@ class	Data {
 				who_string += _srvname;
 				who_string += " ";
 				who_string += it->second._nickname;
+				who_string += " ";
 				if (it->second._mode & AWAY_UFLAG)
-					who_string += " G";
+					who_string += "G";
 				else
-					who_string += " H";
+					who_string += "H";
 				if (it->second._mode & OPER_UFLAG)
-					who_string += " *";
+					who_string += "*";
 				if (!(it->second._channels.empty()))
 				{
 					if (check_member_status(*(it->second._channels.begin()), fd, CREATOR_MFLAG))
-						who_string += " +";
+						who_string += "+";
 					else if (check_member_status(*(it->second._channels.begin()), fd, OPER_MFLAG))
-						who_string += " @";
+						who_string += "@";
 				}
-				who_string += " ";
-				who_string += get_user_flags_str(fd);
 				who_string += " ";
 				who_string += ":0 ";
 				who_string += it->second._realname;
