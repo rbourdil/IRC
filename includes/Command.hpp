@@ -126,8 +126,7 @@ class	Command {
 				std::string err_message = prefix + ":No nickname given\r\n";
 				_data->write_outbuff(dest_fd, err_message);		
 		}
-
-		// 432 HERE I NEED TO CHECK IF HE IS STORING THE ERRONEOUS NICKNAME
+		//432
 		void	err_erroneus_nickname(int dest_fd, const std::vector<std::string> args)
 		{
 			std::string	prefix = ":" + args[0] + " 432 " + _data->get_nickname(dest_fd) + " ";
@@ -560,7 +559,7 @@ class	Command {
 			std::string nickname = _data->get_nickname(dest_fd);
 			std::string	prefix = ":" + args[0] + " 311 " + nickname + " ";
 			std::string err_message = prefix + nickname + " " \
-			+ args[1] + " " + args[2] + " * :" + args[4] + "\r\n";
+			+ args[1] + " " + args[2] + " * :" + args[3] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}
 
