@@ -44,7 +44,7 @@ class	Command {
 		void	topic(int fd, const std::vector<std::string>& params);
 		void	names(int fd, const std::vector<std::string>& params);
 		void	channel_mode(int fd, const std::vector<std::string>& params);
-		void	part(int fd, const std::string& channel, const std::string& message);
+		void	part(int fd, const std::string& channel, std::string message);
 		void	pong(int fd, const std::vector<std::string>& params);
 		void	privmsg(int fd, const std::vector<std::string>& params);
 		void	list(int fd, const std::vector<std::string>& params);
@@ -540,7 +540,7 @@ class	Command {
 		// 352
 		void	rpl_whoreply(int dest_fd, const std::vector<std::string> args)
 		{
-			std::string	prefix = ":" + args[0] + " 352 ";
+			std::string	prefix = ":" + args[0] + " 352 " + _data->get_nickname(dest_fd) + " ";
 			std::string err_message = prefix + args[1] + "\r\n";
 			_data->write_outbuff(dest_fd, err_message);
 		}

@@ -191,7 +191,6 @@ void	Command::join(int fd, std::string channel, std::string key)
 		while (it != channel_list.end())
 		{
 			part(fd, *it, std::string());
-			_args.clear();
 			it++;
 		}
 	}
@@ -281,16 +280,6 @@ void	Command::join(int fd, std::string channel, std::string key)
 			join_reply(*it, _args);
 		_args[0] = _data->get_srvname();
 		std::string	topic = _data->get_channel_topic(channel);
-		/*
-		if (!topic.empty())
-		{
-			_args.push_back(topic);
-			rpl_topic(fd, _args);
-			_args.pop_back();
-		}
-		else
-			rpl_notopic(fd, _args);
-		*/
 		if (_data->check_channel_flags(channel, PRIVATE_CFLAG))
 			_args[1] = "*";
 		else if (_data->check_channel_flags(channel, SECRET_CFLAG))
@@ -314,7 +303,7 @@ void	Command::join(int fd, std::string channel, std::string key)
 	}
 }
 
-void	Command::part(int fd, const std::string& channel, const std::string& message)
+void	Command::part(int fd, const std::string& channel, std::string message)
 {
 	if (!valid_channel(channel) || !_data->channel_exists(channel))
 	{
@@ -332,14 +321,16 @@ void	Command::part(int fd, const std::string& channel, const std::string& messag
 	{
 		std::vector<int>	members_fd = _data->get_members_list_fd(channel);
 		std::vector<int>::iterator	it = members_fd.begin();
-		_args.push_back(_data->get_user_info(fd));
-		_args.push_back(channel);
-		if (!message.empty())
-			_args.push_back(message);
-		else
-			_args.push_back(_data->get_nickname(fd));
+		if (message.empty())
+			message = _data->get_nickname(fd);
 		for (; it != members_fd.end(); ++it)
+		{
+			_args.push_back(_data->get_user_info(fd));
+			_args.push_back(channel);
+			_args.push_back(message);
 			part_reply(*it, _args);
+			_args.clear();
+		}
 		_data->remove_channel_from_user(fd, channel);
 		_data->remove_user_from_channel(fd, channel);
 	}
