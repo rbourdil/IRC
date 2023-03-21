@@ -8,7 +8,7 @@ RED=\033[31m
 NOCOLOR=\033[0m
 
 NAME	= ircserv
-CC		= clang++
+CC		= c++
 FLAGS	= -Wall -Wextra -Werror -std=c++98
 
 SRCS	= $(wildcard ./sources/*.cpp)

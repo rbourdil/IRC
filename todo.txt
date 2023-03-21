@@ -8,3 +8,11 @@ figure out the difference between delete and killed for the client status
 	-how do you kill a client, how do you delete a client
 
 make the receive function to be on the client 
+
+
+exception/invite list is not diplayed properly
+segfault on whois for user that connected and disconnected
+invite prints two # for channel (##chan)
+irssi does not refresh display after being kicked and kick lists message do not seem to broadcast properly
+
+still need to test privmsg on netcat
