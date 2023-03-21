@@ -6,7 +6,7 @@
 /*   By: pcamaren <pcamaren@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/09 19:09:41 by pcamaren          #+#    #+#             */
-/*   Updated: 2023/03/21 12:41:50 by pcamaren         ###   ########.fr       */
+/*   Updated: 2023/03/21 14:55:50 by pcamaren         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -645,6 +645,7 @@ void	Command::valid_whois(int fd, const std::string& nickname)
 
 int		Command::parse_target(int fd, std::string &target)
 {
+	_args.push_back(_data->get_srvname());
 	if (_data->channel_exists(target))
 		return -5;
 	if (_data->nickname_exists(target))
@@ -687,13 +688,11 @@ int		Command::parse_target(int fd, std::string &target)
 				pos = target.find_first_of("@", scanner._current - target.begin());
 				scanner._current = target.begin() + pos;
 				std::string user(scanner._start, scanner._current);				
-				std::cout << "USER: nickname!user is: " << user << std::endl;
 				int dest_fd = _data->get_user_fd(nickname);
 				if (_data->user_nick_match(nickname, user))
 				{
 					++scanner._current;
 					std::string host(scanner._current, target.end());
-					std::cout << "HOST: nickname!user@host is: " << host << std::endl;
 					if (is_valid_host(host))
 					{
 						if (_data->host_fd_match(dest_fd, host))
@@ -718,7 +717,6 @@ int		Command::parse_target(int fd, std::string &target)
 		else if (*scanner._current == '%')
 		{
 			std::string user(scanner._start, scanner._current);
-			std::cout << "user is: " << user << std::endl;
 			int valid_user = _data->user_is_unique(user);
 			if (valid_user == -1)
 			{
@@ -730,7 +728,6 @@ int		Command::parse_target(int fd, std::string &target)
 			else if (valid_user == 0)
 			{
 				_args.push_back(user);
-				std::cout << "nani-meow" << std::endl;
 				error_user(fd, _args);
 				return -1;
 			}
@@ -976,7 +973,7 @@ int		Command::parse_target_notice(std::string &target)
 	size_t pos = target.find_first_of("!@%", scanner._current - target.begin());
 	if (pos == std::string::npos)
 	{
-		if (target.at(0) == '#')
+		if (target.at(0) == '#' || target.at(0) == '&' || target.at(0) == '+' || target.at(0) == '!')
 		{
 			return -1;
 		}
@@ -988,12 +985,9 @@ int		Command::parse_target_notice(std::string &target)
 	else
 	{
 		scanner._current = scanner._start + pos;
-		std::cout << "scanner._current: " << *scanner._current;
 		if (*scanner._current == '!')
 		{
-			std::cout << "it is a !: " << *scanner._current << std::endl;
 			std::string nickname(scanner._start, scanner._current);
-			std::cout << "nickname is: " << nickname << std::endl;
 			if (!_data->nickname_exists(nickname))
 			{
 				return -1;
@@ -1005,13 +999,11 @@ int		Command::parse_target_notice(std::string &target)
 				pos = target.find_first_of("@", scanner._current - target.begin());
 				scanner._current = target.begin() + pos;
 				std::string user(scanner._start, scanner._current);				
-				std::cout << "USER: nickname!user is: " << user << std::endl;
 				int dest_fd = _data->get_user_fd(nickname);
 				if (_data->user_nick_match(nickname, user))
 				{
 					++scanner._current;
 					std::string host(scanner._current, target.end());
-					std::cout << "HOST: nickname!user@host is: " << host << std::endl;
 					if (is_valid_host(host))
 					{
 						if (_data->host_fd_match(dest_fd, host))
@@ -1028,7 +1020,6 @@ int		Command::parse_target_notice(std::string &target)
 		else if (*scanner._current == '%')
 		{
 			std::string user(scanner._start, scanner._current);
-			std::cout << "user is: " << user << std::endl;
 			int valid_user = _data->user_is_unique(user);
 			if (valid_user == -1)
 				return -1;
@@ -1044,7 +1035,6 @@ int		Command::parse_target_notice(std::string &target)
 				if (pos == std::string::npos)
 				{
 					
-					std::cout << "HOST: user'%'host: " << host << std::endl;
 					if (_data->host_fd_match(valid_user, host))
 						return (valid_user);
 					else
@@ -1052,10 +1042,8 @@ int		Command::parse_target_notice(std::string &target)
 				}
 				else
 				{
-					std::cout << "HOST: user'%'host@servername: " << host << std::endl;
 					++scanner._current;
 					std::string servername(scanner._current, target.end());
-					std::cout << "SERVERNAME: user'%'host@servername: " << servername << std::endl;
 					if (servername == _data->get_srvname())
 						return (valid_user);
 					else
@@ -1067,9 +1055,7 @@ int		Command::parse_target_notice(std::string &target)
 		}
 		else if (*scanner._current == '@')
 		{
-			std::cout << "it is a @: " << *scanner._current << std::endl;
 			std::string user(scanner._start, scanner._current);
-			std::cout << "user is: " << user << std::endl;
 			int valid_user = _data->user_is_unique(user);
 			if (valid_user == -1)
 				return -1;
@@ -1077,7 +1063,6 @@ int		Command::parse_target_notice(std::string &target)
 				return -1;
 			++scanner._current;
 			std::string servername(scanner._current, target.end());
-			std::cout << "SERVERNAME: user@servername: " << servername << std::endl;
 			if (servername == _data->get_srvname())
 				return (valid_user);
 			else

@@ -187,7 +187,6 @@ void	Server::run()
 			}
 			if ( _iter->revents & POLLIN)
 			{
-				std::cout << "is POLLIN" << std::endl;
 				ssize_t	count = recv(_iter->fd, buff, BUFSIZE, 0);
 				if (count < 0)
 				{
