@@ -44,3 +44,6 @@ After compiling, run the server with the following command:
 
 This server will work with IRSSI client and with netcat 
 
+### Built with love by:
+@rbourdil & @pierinacamaren
+
